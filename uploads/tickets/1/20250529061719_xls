@@ -1,0 +1,1543 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Первый лист</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--><meta http-equiv="content-type" content="text/plain; charset=UTF-8"/><style>
+        table {
+            border: 1px solid #000;
+        }
+        table tbody td{
+            border: 1px solid #000;
+        }
+        table thead td {
+            text-align: center;
+            border: 1px solid #000;
+        }
+        table tfoot td {
+           padding-top: 10px;
+           padding-bottom: 10px;
+           border: 1px solid #000;
+        }
+        table td {
+           padding: 1px;
+           font-size: 11px;
+           border-collapse: collapse;
+        }
+        table td:not(:first-child) {
+            text-align: center;
+        }
+    
+        .form-notify {
+            position: fixed;
+            width: auto;
+            z-index: 1000;
+            overflow: hidden;
+            word-break: break-word !important;
+        }
+        .form-notify {
+            word-break: break-all; // fallback для FF старее 67 (https://bugzilla.mozilla.org/show_bug.cgi?id=1296042)
+        }
+        .form-notify .container {
+            padding: 10px;
+            width: 400px;
+            margin: 10px;
+        }
+		.form-notify .close-all {
+			text-align: right;
+			padding: 0 10px;
+		}
+		.form-notify .close-box {
+			display: inline-block;
+			padding: 4px 14px 6px;
+			background: rgba(0, 0, 0, 0.70) none repeat scroll 0 0;
+			box-shadow: 0 0 4px #000;
+			border-radius: 8px;
+			color: #ffffff;
+		}
+		.form-notify .close-box .fix-hyper-link.ctrl_hyper_link {
+			color: #ffffff;
+		}
+        .form-notify .label {
+            color: #fff;
+        }
+        .form-notify .split {
+            border-image: none;
+            border: 0 none -moz-use-text-color;
+            border-top: 1px solid #aaaaaa;
+        }
+        .form-notify .message {
+            padding-bottom: 10px;
+        }
+        .form-notify .message span {
+            line-height: 16px;
+        }
+        .form-notify .reply-content {
+            margin-bottom: 10px;
+        }
+        .form-notify .close-btn {
+            color: #777;
+            font: 14px/100% arial,sans-serif;
+            text-decoration: none;
+            text-shadow: 0 1px 0 #111;
+            cursor: pointer;
+            float: right;
+            margin-bottom: 10px;
+        }
+        .form-notify .close-btn::after {
+            content: "✖";
+        }
+        .form-notify .close-btn:hover {
+            color: #d3d3d3;
+        }
+        .form-notify .bold {
+            font-weight: bold;
+        }
+        .form-notify .grey {
+            color: #808080;
+        }
+        /**/
+        .form-notify .fix-hyper-link:hover {
+            cursor: pointer;
+        }
+        .label a {
+            color: #FFF;
+        }
+
+        .formNotify {
+            top: 60px;
+            right: 30px;
+        }
+        .formNotify .container {
+            background: rgba(0, 0, 0, 0.70) none repeat scroll 0 0;
+            box-shadow: 0 0 6px #000;
+            border-radius: 8px;
+        }
+    
+        /* старый */
+        #ProgressMis.old{
+            opacity:0.3;
+            filter:alpha(opacity=30);
+        }
+        #ProgressMis.old > .progress-bar{
+            background-image: url("Images/loading.gif");
+            width: 211px;
+            height: 62px;
+            display: inline-block;
+            margin: auto;
+        }
+        #ProgressMis.old > .progress-bar .progress{
+            display: none;
+        }
+
+        /* новый */
+        #ProgressMis{
+            z-index: 1000;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0px;
+            display: flex;
+        }
+        #ProgressMis.non{
+            display: none;
+        }
+
+    </style></head><body><div><div cmptype="Form" oncreate="base().onCreate();" style="width:210mmx297mm;" scrollable="true" formname="Reports/Statistic/visits_filling" id="Form_uid51709540840347">
+    
+
+    
+
+    
+
+    
+
+     
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <table width="100%">
+        
+        <thead>
+        <tr>
+            <td name="TITLE_ROW" style="border:1px solid #fff;border-bottom: 1px solid #000;" colspan="9">
+                 <p style="width:100%;font-size: 12pt; text-align: center; font-weight: bold;">
+                    Процент заполнения информации на приеме
+                    <br> за период
+                    c  <span cmptype="Label" name="DATE_S">26.02.2024</span>
+                    по <span cmptype="Label" name="DATE_F">03.03.2024</span>
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td>№</td>
+            <td><span cmptype="Label" name="Emp_Cab">Ф.И.О. врача</span></td> 
+            <td name="BY_EMP_DIR_SERVS_COUNT_NAME">Количество записей на услугу</td>
+            <td>Количество оказанных услуг</td>
+            <td>Количество неявок и отмененных записей</td>
+            <td>Процент заполнения информации в визите</td>
+            <td>Количество услуг оказанных (без учета медосмотров)</td>
+            <td>Процент заполнения информации в визите (без учета медосмотров)</td>
+            <td>Количество направлений</td>
+            <td>Выписано льготных рецептов</td>
+            <td>Выписано листков нетрудоспособности</td>
+            <td>Количество направлений на госпитализацию</td>
+        </tr>
+        <tr>
+            <td>1</td>
+            <td>2</td>
+            <td>3</td>
+            <td>4</td>
+            <td>5</td>
+            <td>6</td>
+            <td>7</td>
+            <td>8</td>
+            <td>9</td>
+            <td>10</td>
+            <td>11</td>
+            <td name="BY_EMP_COLNUMB_12">12</td>
+        </tr>
+        </thead>
+
+        
+
+        <tbody repeate="0" dataset="DS_FILLING_BY_EMP" distinct="DEP_ID" clone="true" cmptype="clone" style="">
+        <tr>
+            <td name="BY_EMP_DEP_ROW" colspan="10" style="padding-left: 4px;text-align: left;"><span cmptype="Label" name="cmp65e585ad1431e" captionfield="DEP_NAME">Женская консультация</span></td>
+        </tr>
+        <tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">1</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Андреева Елена Ивановна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">72</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">51</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">26%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">51</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">26%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">173</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">9</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">2</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Артемова Елена Александровна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">106</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">75</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">10</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">19%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">75</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">19%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">194</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">3</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">8</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">3</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Щепихина Ирина Викторовна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">116</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">98</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">7</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">27%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">98</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">27%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">501</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">2</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">3</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">4</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Тураева Ольга Петровна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">16</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">13</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">3</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">19%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">13</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">19%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">26</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">5</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Бакланова Ирина Викторовна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">99</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">74</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">24</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">27%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">74</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">27%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">161</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">1</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">4</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">6</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Беляева Марина Павловна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">78</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">69</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">22%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">69</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">22%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">214</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">7</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Болтенкова Анастасия Дмитриевна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">108</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">93</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">12</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">26%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">93</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">26%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">495</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">4</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">4</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">8</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Дорохова Екатерина Игоревна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">15</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">13</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">29%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">13</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">29%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">98</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">2</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">9</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Ельникова Татьяна Сергеевна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">17</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">88</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">36%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">88</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">36%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">10</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Журавлева Елена Александровна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">79</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">57</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">20</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">20%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">57</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">20%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">350</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">1</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">4</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">11</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Зайцева Ольга Витальевна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">88</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">301</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">9</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">7%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">301</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">7%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">12</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Залевская Кристина Сергеевна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">100</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">67</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">12</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">25%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">67</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">25%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">384</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">3</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">7</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">13</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Зюкина Татьяна Игоревна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">43</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">147</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">6</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">7%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">147</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">7%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">14</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Киреева Евгения Олеговна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">87</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">70</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">2</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">29%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">70</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">29%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">315</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">1</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">6</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">15</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Кузьмина Екатерина Геннадьевна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">74</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">61</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">1</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">28%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">61</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">28%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">156</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">16</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Ольховикова Людмила Дмитриевна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">105</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">85</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">12</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">26%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">85</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">26%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">395</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">1</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">12</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">17</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Рыбникова Ольга Николаевна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">128</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">94</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">11</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">25%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">94</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">25%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">239</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">3</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">18</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Семенова Ольга Васильевна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">103</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">89</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">2</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">25%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">89</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">25%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">359</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">3</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">5</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">19</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Сингх Соня Абхаевна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">122</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">82</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">5</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">27%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">82</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">27%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">415</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">5</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">7</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">20</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Суббочева Наталья Игоревна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">36</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">129</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">34%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">129</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">34%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr>
+        </tbody><tbody repeate="0" dataset="DS_FILLING_BY_EMP" distinct="DEP_ID" clone="true" cmptype="clone" style="">
+        <tr>
+            <td name="BY_EMP_DEP_ROW" colspan="10" style="padding-left: 4px;text-align: left;"><span cmptype="Label" name="cmp65e585ad1431e" captionfield="DEP_NAME">Клинико-диагностическая лаборатория</span></td>
+        </tr>
+        <tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">1</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Мальцев Андрей Геннадьевич</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">21</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">39%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">21</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">39%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">2</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Ариадна Лис</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">5804</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">0%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">5666</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">0%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">3</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Новикова Наталья Владимировна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">12</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">43%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">12</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">43%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr>
+        </tbody><tbody repeate="0" dataset="DS_FILLING_BY_EMP" distinct="DEP_ID" clone="true" cmptype="clone" style="">
+        <tr>
+            <td name="BY_EMP_DEP_ROW" colspan="10" style="padding-left: 4px;text-align: left;"><span cmptype="Label" name="cmp65e585ad1431e" captionfield="DEP_NAME">Поликлиника</span></td>
+        </tr>
+        <tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">1</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Альбинский Лев Борисович</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">169</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">115</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">10</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">28%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">98</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">31%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">460</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">59</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">3</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">2</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Афанасенко Анна Адыхамовна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">24</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">10%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">0%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">3</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Бабина Елена Викторовна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">102</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">97</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">40%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">97</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">40%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">186</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">140</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">4</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Батраченко Сергей Александрович</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">2</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">2</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">56%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">2</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">56%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">5</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Белкина Наталья Михайловна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">90</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">89</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">36%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">89</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">36%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">199</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">27</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">3</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">6</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Волков Михаил Валентинович</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">51</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">49</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">47%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">49</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">47%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">7</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Гаврилова Лариса Юрьевна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">195</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">120</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">9</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">23%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">108</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">25%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">628</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">76</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">6</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">8</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Дячок Светлана Алексеевна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">97</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">80</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">7</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">21%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">80</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">21%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">110</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">1</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">2</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">9</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Забелина Екатерина Кирилловна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">189</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">120</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">9</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">24%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">120</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">24%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">662</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">109</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">2</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">2</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">10</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Загоруева Галина Викторовна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">87</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">69</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">1</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">26%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">69</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">26%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">1</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">11</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Кречетова Галина Святославовна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">93</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">79</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">28%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">79</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">28%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">90</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">52</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">12</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Локтионова Виктория Игоревна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">86</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">71</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">18</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">37%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">71</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">37%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">105</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">13</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Мальцева Нелли Григорьевна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">211</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">104</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">11</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">19%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">103</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">19%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">532</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">81</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">7</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">4</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">14</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Медведкова Юлия Алексеевна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">112</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">95</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">17</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">35%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">94</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">37%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">174</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">2</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">2</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">15</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Мележенкова Анастасия Юрьевна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">89</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">34</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">4</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">38%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">33</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">42%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">173</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">20</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">16</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Мельчинская Евгения Николаевна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">36</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">31</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">1</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">35%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">31</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">35%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">40</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">17</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Мотузова Вероника Владимировна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">168</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">114</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">9</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">26%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">112</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">27%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">1054</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">49</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">3</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">1</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">18</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Найденкова Ирина Михайловна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">67</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">45</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">3</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">44%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">45</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">44%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">214</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">19</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Нарыкова Татьяна Витальевна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">12</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">11</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">53%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">11</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">53%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">22</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">20</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Ничевилова Елена Васильевна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">104</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">74</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">4</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">24%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">74</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">24%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">21</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Панюкова Жанна Владимировна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">189</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">126</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">3</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">23%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">124</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">24%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">467</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">65</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">7</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">1</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">22</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Пашечко Олег Сергеевич</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">58</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">49</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">55%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">48</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">61%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">23</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Пашина Юлия Ивановна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">86</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">61</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">6</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">29%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">61</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">29%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">36</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">24</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Пузанов Валерий Витальевич</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">62</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">60</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">52%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">60</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">52%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">45</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">25</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Пшеничных Анна Сергеевна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">28</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">18</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">10</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">26%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">18</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">26%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">33</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">1</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">26</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Савенкова Галина Валерьевна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">102</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">90</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">22%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">90</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">22%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">19</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">1</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">1</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">27</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Середенко Софья Михайловна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">132</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">113</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">27</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">37%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">111</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">38%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">739</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">14</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">28</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Сироткина Екатерина Владимировна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">58</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">38</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">11</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">38%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">38</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">38%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">196</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">1</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">29</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Спатарь Татьяна Викторовна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">130</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">92</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">36</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">23%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">92</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">23%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">520</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">57</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">3</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">30</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Струков Алексей Александрович</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">77</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">77</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">47%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">77</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">47%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">31</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Тиганова Юлия Николаевна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">129</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">82</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">12</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">38%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">80</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">39%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">335</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">41</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">32</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Титов Юрий Викторович</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">30</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">29</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">56%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">29</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">56%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">68</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">33</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Толмачев Андрей Владимирович</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">2</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">8</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">49%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">8</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">49%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">34</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Филатова Анна Евгеньевна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">79</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">25%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">79</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">25%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">274</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">35</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Фирсова Ольга Владимировна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">167</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">67</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">2</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">22%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">67</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">22%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">464</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">42</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">4</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">6</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">36</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Харская Анастасия Александровна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">91</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">25%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">91</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">25%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">254</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">1</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">43</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">37</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Цветкова Марина Павловна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">169</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">36%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">0%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">38</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Цуканова Татьяна Ивановна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">174</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">99</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">33</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">24%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">97</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">24%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">347</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">78</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">1</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">1</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">39</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Чувакин Владимир Сергеевич</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">39</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">32</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">45%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">32</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">45%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">8</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">40</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Шумакова Анна Витальевна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">118</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">75</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">21%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">75</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">21%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">28</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">1</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">41</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Щербаков Александр Николаевич</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">86</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">73</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">1</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">84%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">73</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">84%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr>
+        </tbody><tbody repeate="0" dataset="DS_FILLING_BY_EMP" distinct="DEP_ID" clone="true" cmptype="clone" style="">
+        <tr>
+            <td name="BY_EMP_DEP_ROW" colspan="10" style="padding-left: 4px;text-align: left;"><span cmptype="Label" name="cmp65e585ad1431e" captionfield="DEP_NAME">Функциональная диагностика</span></td>
+        </tr>
+        <tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">1</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Чухнюк Виталина Николаевна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">1</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">302</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">52%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">263</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">59%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr>
+        </tbody><tbody repeate="0" dataset="DS_FILLING_BY_EMP" distinct="DEP_ID" clone="true" cmptype="clone" style="">
+        <tr>
+            <td name="BY_EMP_DEP_ROW" colspan="10" style="padding-left: 4px;text-align: left;"><span cmptype="Label" name="cmp65e585ad1431e" captionfield="DEP_NAME">Физиотерапевтическое</span></td>
+        </tr>
+        <tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">1</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Лагутина Ольга Викторовна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">72</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">87</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">20%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">87</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">20%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">2</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Гнучева Марина Николаевна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">87</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">83</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">17%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">83</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">17%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">3</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Воронова Ольга Николаевна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">88</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">87</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">17%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">87</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">17%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr>
+        </tbody><tbody repeate="0" dataset="DS_FILLING_BY_EMP" distinct="DEP_ID" clone="true" cmptype="clone" style="">
+        <tr>
+            <td name="BY_EMP_DEP_ROW" colspan="10" style="padding-left: 4px;text-align: left;"><span cmptype="Label" name="cmp65e585ad1431e" captionfield="DEP_NAME">Рентгенодиагностики</span></td>
+        </tr>
+        <tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">1</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Гончарова Валентина Васильевна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">14</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">58</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">2</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">47%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">58</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">47%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">2</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Гераськов Дмитрий Васильевич</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">38</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">49%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">37</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">51%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">3</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Горбачёв Юрий Иванович</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">2</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">30</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">55%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">30</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">55%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">4</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Мальцева Анна Анатольевна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">78</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">53%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">75</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">55%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">5</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Ефименко Николай Николаевич</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">19</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">59%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">14</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">80%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">6</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Дураков Игорь Владимирович</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">4</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">47%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">4</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">47%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr>
+        </tbody><tbody repeate="0" dataset="DS_FILLING_BY_EMP" distinct="DEP_ID" clone="true" cmptype="clone" style="">
+        <tr>
+            <td name="BY_EMP_DEP_ROW" colspan="10" style="padding-left: 4px;text-align: left;"><span cmptype="Label" name="cmp65e585ad1431e" captionfield="DEP_NAME">Ультразвуковая диагностика</span></td>
+        </tr>
+        <tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">1</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Акатова Ирина Михайловна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">50</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">73</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">33%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">73</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">33%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">2</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Михайлова Наталья Владимировна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">46</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">76</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">33%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">76</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">33%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">3</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Николаевская Наталья Игоревна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">3</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">3</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">40%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">3</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">40%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr>
+        </tbody><tbody repeate="0" dataset="DS_FILLING_BY_EMP" distinct="DEP_ID" clone="true" cmptype="clone" style="">
+        <tr>
+            <td name="BY_EMP_DEP_ROW" colspan="10" style="padding-left: 4px;text-align: left;"><span cmptype="Label" name="cmp65e585ad1431e" captionfield="DEP_NAME">2 гинекологическое отделение</span></td>
+        </tr>
+        <tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">1</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Тугаринова Мария Сергеевна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">5</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">55</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">47%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">55</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">47%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">9</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">2</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Цуканова Анастасия Васильевна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">1</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">86%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">1</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">86%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">3</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Смахтина Татьяна Владимировна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">1</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">39</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">41%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">39</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">41%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">4</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">4</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Рыжков Никита Сергеевич</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">8</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">50%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">8</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">50%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">5</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Романяк Евгений Геннадиевич</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">3</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">41%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">3</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">41%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">6</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Пузанова Татьяна Владимировна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">2</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">94%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">2</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">94%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">7</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Перькова Наталья Михайловна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">2</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">94%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">2</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">94%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">8</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Дроздова Светлана Игоревна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">1</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">4</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">48%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">4</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">48%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">9</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Долженкова Наталья Викторовна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">8</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">32</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">71%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">32</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">71%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">3</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">10</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Голубев Иван Владимирович</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">88</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">56%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">88</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">56%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">7</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr>
+        </tbody><tbody repeate="0" dataset="DS_FILLING_BY_EMP" distinct="DEP_ID" clone="true" cmptype="clone" style="">
+        <tr>
+            <td name="BY_EMP_DEP_ROW" colspan="10" style="padding-left: 4px;text-align: left;"><span cmptype="Label" name="cmp65e585ad1431e" captionfield="DEP_NAME">Урологическое отделение №2</span></td>
+        </tr>
+        <tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">1</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Алферов Иван Васильевич</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">14</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">4</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">40%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">4</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">40%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr>
+        </tbody><tbody repeate="0" dataset="DS_FILLING_BY_EMP" distinct="DEP_ID" clone="true" cmptype="clone" style="">
+        <tr>
+            <td name="BY_EMP_DEP_ROW" colspan="10" style="padding-left: 4px;text-align: left;"><span cmptype="Label" name="cmp65e585ad1431e" captionfield="DEP_NAME">1 гинекологическое отделение</span></td>
+        </tr>
+        <tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">1</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Кононенко Сергей Сергеевич</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">12</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">77</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">56%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">77</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">56%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">284</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">7</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">2</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Кеня Андрей Алексеевич</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">64</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">53%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">64</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">53%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">4</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">3</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Грачева Галина Викторовна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">2</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">30</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">53%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">30</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">53%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">4</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Тригуб Алексей Николаевич</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">11</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">91</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">55%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">91</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">55%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">170</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">5</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">5</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Артамонова Юлия Витальевна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">74</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">46%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">74</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">46%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">3</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr>
+        </tbody><tbody repeate="0" dataset="DS_FILLING_BY_EMP" distinct="DEP_ID" clone="true" cmptype="clone" style="">
+        <tr>
+            <td name="BY_EMP_DEP_ROW" colspan="10" style="padding-left: 4px;text-align: left;"><span cmptype="Label" name="cmp65e585ad1431e" captionfield="DEP_NAME">Отделение анестезиологии-реаниматологии для женщин</span></td>
+        </tr>
+        <tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">1</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Гаджиризаева Санига Рахмановна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">3</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">75%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">3</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">75%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">2</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Лукьянченко Алина Викторовна</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">6</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">70%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">6</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">70%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">3</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Макаров Святослав Станиславович</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">12</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">71%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">12</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">71%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr><tr repeate="0" detail="true" dataset="DS_FILLING_BY_EMP" clone="true" cmptype="clone" style="">
+            <td style="text-align: center;min-width: 20px"><span cmptype="Label" name="cmp65e585ad1434d" captionfield="RN">4</span></td>
+            <td style="padding-left:4px;text-align: left;min-width: 220px"><span cmptype="Label" name="cmp65e585ad1436b" captionfield="EMP_FIO">Аброськин Кирилл Владимирович</span></td>
+            <td><span cmptype="Label" name="BY_EMP_DIR_SERVS_COUNT" captionfield="DIR_SERVS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143a0" captionfield="VISITS_COUNT">6</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143b9" captionfield="DIR_SERVS_CANCELED_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143d2" captionfield="PERCENT">68%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad143ea" captionfield="VISITS_COUNT_NO_PHYSICAL">6</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14402" captionfield="PERCENT_NO_PHYSICAL">68%</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1441a" captionfield="VIS_DIRS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14432" captionfield="RECIPES_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad1444b" captionfield="BULLS_COUNT">0</span></td>
+            <td><span cmptype="Label" name="cmp65e585ad14464" captionfield="HOSP_DIRS_COUNT">0</span></td>
+        </tr>
+        </tbody>
+
+        
+
+        
+
+        
+
+        <tfoot>
+            <tr>
+                <td name="FOOTER_ROW" colspan="9" style="border:1px solid #fff;border-top: 1px solid #000;">
+                    <p style="font-size: 11pt; text-align: right;">
+                        <span cmptype="Label" name="SYSDATE">04.03.2024</span>
+                    </p>
+                </td>
+            </tr>
+        </tfoot>
+
+    </table>
+
+</div></div></body></html>

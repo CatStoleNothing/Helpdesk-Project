@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Создать пользователя | Helpdesk{% endblock %}
+{% block page_title %}Создание нового пользователя{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h4 class="mb-4"><i class="fas fa-user-plus me-2"></i>Создание нового пользователя</h4>
+
+    <form action="{{ url_for('create_user') }}" method="post">
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="full_name" class="form-label">ФИО*</label>
+                <input type="text" class="form-control" id="full_name" name="full_name" placeholder="Введите ФИО пользователя" required>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label for="role" class="form-label">Роль*</label>
+                <select class="form-select" id="role" name="role" required>
+                    <option value="user">Пользователь</option>
+                    <option value="admin">Администратор</option>
+                    <option value="curator">Куратор</option>
+                </select>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label for="username" class="form-label">Логин для входа*</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                    <input type="text" class="form-control" id="username" name="username" placeholder="Введите логин">
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label for="password" class="form-label">Пароль*</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Введите пароль">
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <label for="position" class="form-label">Должность</label>
+                <input type="text" class="form-control" id="position" name="position" placeholder="Укажите должность">
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <label for="department" class="form-label">Отдел</label>
+                <input type="text" class="form-control" id="department" name="department" placeholder="Укажите отдел">
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <label for="office" class="form-label">Офис</label>
+                <input type="text" class="form-control" id="office" name="office" placeholder="Укажите офис">
+            </div>
+
+            <div class="col-md-12 mb-3">
+                <label for="chat_id" class="form-label">ID в Telegram</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fab fa-telegram"></i></span>
+                    <input type="text" class="form-control" id="chat_id" name="chat_id" placeholder="ID пользователя в Telegram">
+                </div>
+                <div class="form-text">Укажите ID пользователя в Telegram для связывания учетной записи с ботом.</div>
+            </div>
+
+            <div class="col-md-12 text-end mt-3">
+                <a href="{{ url_for('users') }}" class="btn btn-secondary me-2">
+                    <i class="fas fa-times me-1"></i> Отмена
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i> Создать пользователя
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

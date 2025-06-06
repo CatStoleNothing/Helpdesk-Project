@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Редактирование пользователя | Helpdesk{% endblock %}
+{% block page_title %}Редактирование пользователя{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h4 class="mb-4"><i class="fas fa-user-edit me-2"></i>Редактирование пользователя</h4>
+
+    <form action="{{ url_for('edit_user', user_id=user.id) }}" method="post">
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="full_name" class="form-label">ФИО*</label>
+                <input type="text" class="form-control" id="full_name" name="full_name" placeholder="Введите ФИО пользователя" value="{{ user.full_name }}" required>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label for="role" class="form-label">Роль*</label>
+                <select class="form-select" id="role" name="role" required>
+                    <option value="user" {% if user.role == 'user' %}selected{% endif %}>Пользователь</option>
+                    <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Администратор</option>
+                    <option value="curator" {% if user.role == 'curator' %}selected{% endif %}>Куратор</option>
+                </select>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label for="username" class="form-label">Логин для входа*</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                    <input type="text" class="form-control" id="username" name="username" placeholder="Введите логин" value="{{ user.username }}">
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label for="password" class="form-label">Пароль (оставьте пустым, чтобы не менять)</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Введите новый пароль">
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <label for="position" class="form-label">Должность</label>
+                <input type="text" class="form-control" id="position" name="position" placeholder="Укажите должность" value="{{ user.position }}">
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <label for="department" class="form-label">Отдел</label>
+                <input type="text" class="form-control" id="department" name="department" placeholder="Укажите отдел" value="{{ user.department }}">
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <label for="office" class="form-label">Кабинет</label>
+                <input type="text" class="form-control" id="office" name="office" placeholder="Укажите кабинет" value="{{ user.office }}">
+            </div>
+
+            <div class="col-md-12 mb-3">
+                <label for="chat_id" class="form-label">ID в Telegram</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fab fa-telegram"></i></span>
+                    <input type="text" class="form-control" id="chat_id" name="chat_id" placeholder="Введите ID в Telegram" value="{{ user.chat_id }}">
+                </div>
+                <small class="text-muted">Изменение этого параметра может нарушить связь с ботом Telegram</small>
+            </div>
+
+            <div class="col-md-12 mb-4">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Информация о пользователе</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>ID пользователя:</strong> {{ user.id }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Статус:</strong>
+                                    {% if user.is_active and user.is_confirmed %}
+                                        <span class="badge bg-success">Активен</span>
+                                    {% elif user.is_active and not user.is_confirmed %}
+                                        <span class="badge bg-warning text-dark">Ожидает подтверждения</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Заблокирован</span>
+                                    {% endif %}
+                                </p>
+                                <p><strong>Дата регистрации:</strong> {{ user.created_at|datetime }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-12 text-end">
+                <a href="{{ url_for('users') }}" class="btn btn-secondary me-2">
+                    <i class="fas fa-arrow-left me-1"></i> Вернуться к списку
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i> Сохранить изменения
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

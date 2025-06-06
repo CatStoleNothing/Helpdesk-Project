@@ -1,0 +1,13 @@
+[2025.05.30 11:29:59] Launched version: 5014003, install beta: [FALSE], alpha: 0, debug mode: [FALSE]
+[2025.05.30 11:29:59] Executable dir: C:/Users/nsolovey/Downloads/TelegramDesktopPortable/App/Telegram/, name: Telegram.exe
+[2025.05.30 11:29:59] Initial working dir: C:/Users/nsolovey/Downloads/TelegramDesktopPortable/App/Telegram/
+[2025.05.30 11:29:59] Working dir: C:/Users/nsolovey/Downloads/TelegramDesktopPortable/App/Telegram/
+[2025.05.30 11:29:59] Command line: C:\Users\nsolovey\Downloads\TelegramDesktopPortable\App\Telegram\Telegram.exe
+[2025.05.30 11:29:59] Executable path before check: C:/Users/nsolovey/Downloads/TelegramDesktopPortable/App/Telegram/Telegram.exe
+[2025.05.30 11:29:59] Logs started
+[2025.05.30 11:29:59] AppUserModelID: Telegram.TelegramDesktop.d067bb63193be14d912511cb689f67db
+[2025.05.30 11:29:59] Using DirectX compiler 'C:\Users\nsolovey\Downloads\TelegramDesktopPortable\App\Telegram\modules\x86\d3d\d3dcompiler_47.dll'.
+[2025.05.30 11:29:59] Connecting local socket to Global\71a92d2d6eee7ff02a59a3fe922d3f7d-{87A94AB0-E370-4cde-98D3-ACC110C5967D}...
+[2025.05.30 11:29:59] Socket connected, this is not the first application instance, sending show command...
+[2025.05.30 11:29:59] Show command written, waiting response...
+[2025.05.30 11:29:59] Show command response received, processId = 18584, windowId = 197324, activating and quitting...

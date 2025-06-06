@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Создать категорию | Helpdesk{% endblock %}
+{% block page_title %}Создание новой категории{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h4 class="mb-4"><i class="fas fa-tag me-2"></i>Создание новой категории</h4>
+
+    <form action="{{ url_for('create_category') }}" method="post">
+        <div class="row">
+            <div class="col-md-12 mb-3">
+                <label for="name" class="form-label">Название категории*</label>
+                <input type="text" class="form-control" id="name" name="name" placeholder="Введите название категории" required>
+            </div>
+
+            <div class="col-md-12 mb-3">
+                <label for="description" class="form-label">Описание</label>
+                <textarea class="form-control" id="description" name="description" rows="4" placeholder="Введите описание категории"></textarea>
+            </div>
+
+            <div class="col-md-12 mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="is_active" name="is_active" checked>
+                    <label class="form-check-label" for="is_active">
+                        Категория активна
+                    </label>
+                </div>
+            </div>
+
+            <div class="col-md-12 text-end">
+                <a href="{{ url_for('categories_page') }}" class="btn btn-secondary me-2">
+                    <i class="fas fa-times me-1"></i> Отмена
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i> Создать категорию
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

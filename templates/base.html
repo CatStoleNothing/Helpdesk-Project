@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Helpdesk Administration{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="wrapper">
+        <!-- Sidebar -->
+        {% if current_user.is_authenticated %}
+        <nav id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h3><a href="{{ url_for('dashboard') }}" class="text-decoration-none text-white">ОБУЗ КГКБСМП</a></h3>
+            </div>
+
+            <ul class="list-unstyled components">
+                <li class="{% if request.path == url_for('dashboard') %}active{% endif %}">
+                    <a href="{{ url_for('dashboard') }}">
+                        <i class="fas fa-tachometer-alt"></i> Раздел статистики
+                    </a>
+                </li>
+                <li class="{% if request.path == url_for('tickets') %}active{% endif %}">
+                    <a href="{{ url_for('tickets') }}">
+                        <i class="fas fa-ticket-alt"></i> Заявки
+                    </a>
+                </li>
+                <li class="{% if request.path == url_for('create_ticket') %}active{% endif %}">
+                    <a href="{{ url_for('create_ticket') }}">
+                        <i class="fas fa-plus-circle"></i> Новая заявка
+                    </a>
+                </li>
+                {% if current_user.role == 'curator' %}
+                <li class="{% if request.path == url_for('users') %}active{% endif %}">
+                    <a href="{{ url_for('users') }}">
+                        <i class="fas fa-users"></i> Пользователи
+                    </a>
+                </li>
+                <li class="{% if request.path == url_for('registration_approval') %}active{% endif %}">
+                    <a href="{{ url_for('registration_approval') }}">
+                        <i class="fas fa-user-check"></i> Контроль учетных записей
+                    </a>
+                </li>
+                <li class="{% if 'categories' in request.path %}active{% endif %}">
+                    <a href="{{ url_for('categories_page') }}">
+                        <i class="fas fa-tags"></i> Категории
+                    </a>
+                </li>
+                {% elif current_user.role == 'admin' %}
+                <li class="{% if request.path == url_for('registration_approval') %}active{% endif %}">
+                    <a href="{{ url_for('registration_approval') }}">
+                        <i class="fas fa-user-check"></i> Контроль учетных записей
+                    </a>
+                </li>
+                <li class="{% if 'categories' in request.path %}active{% endif %}">
+                    <a href="{{ url_for('categories_page') }}">
+                        <i class="fas fa-tags"></i> Категории
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <span class="user-name">{{ current_user.full_name }}</span>
+                </div>
+                <a href="{{ url_for('logout') }}" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> Выйти
+                </a>
+            </div>
+        </nav>
+        {% endif %}
+
+        <!-- Page Content -->
+        <div id="content" class="{% if not current_user.is_authenticated %}full-width{% endif %}">
+            {% if current_user.is_authenticated %}
+            <!-- Top Navbar -->
+            <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                <div class="container-fluid">
+                    <button type="button" id="sidebarCollapse" class="btn btn-info">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <span class="page-title">{% block page_title %}{% endblock %}</span>
+                    <div class="ms-auto d-flex align-items-center">
+                    </div>
+                </div>
+            </nav>
+            {% endif %}
+
+            <div class="container-fluid p-4">
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category if category != 'message' else 'info' }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <!-- Main Content -->
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

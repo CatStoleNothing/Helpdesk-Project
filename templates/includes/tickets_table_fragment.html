@@ -1,0 +1,101 @@
+<div class="table-container">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Заголовок</th>
+                <th>Создатель</th>
+                <th>Исполнитель</th>
+                <th>Категория</th>
+                <th>Приоритет</th>
+                <th>Статус</th>
+                <th>Создана</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if tickets %}
+                {% for ticket in tickets %}
+                <tr>
+                    <td>{{ ticket.id }}</td>
+                    <td>
+                        <a href="{{ url_for('ticket_detail', ticket_id=ticket.id) }}">
+                            {{ ticket.title }}
+                        </a>
+                    </td>
+                    <td>{{ ticket.creator_name }}</td>
+                    <td>{{ ticket.assignee }}</td>
+                    <td>{{ ticket.category_name }}</td>
+                    <td>
+                        <span class="badge priority-{{ ticket.priority }}">
+                            {% if ticket.priority == 'low' %}
+                                Низкий
+                            {% elif ticket.priority == 'normal' %}
+                                Средний
+                            {% elif ticket.priority == 'high' %}
+                                Высокий
+                            {% else %}
+                                {{ ticket.priority }}
+                            {% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge status-{{ ticket.status }}">
+                            {% if ticket.status == 'new' %}
+                                Новая
+                            {% elif ticket.status == 'in_progress' %}
+                                В работе
+                            {% elif ticket.status == 'resolved' %}
+                                Решена
+                            {% elif ticket.status == 'irrelevant' %}
+                                Неактуально
+                            {% elif ticket.status == 'closed' %}
+                                Закрыта
+                            {% else %}
+                                {{ ticket.status }}
+                            {% endif %}
+                        </span>
+                    </td>
+                    <td>{{ ticket.created_at|datetime }}</td>
+                    <td>
+                        <a href="{{ url_for('ticket_detail', ticket_id=ticket.id) }}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="9" class="text-center py-4">Заявки не найдены</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+{% if total_pages > 1 %}
+<div class="pagination-container">
+    <nav aria-label="Pagination">
+        <ul class="pagination">
+            <li class="page-item {% if not has_prev %}disabled{% endif %}">
+                <a class="page-link" href="#" data-page="{{ page - 1 }}" {% if not has_prev %}tabindex="-1" aria-disabled="true"{% endif %}>
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+
+            {% for p in range(1, total_pages + 1) %}
+                <li class="page-item {% if p == page %}active{% endif %}">
+                    <a class="page-link" href="#" data-page="{{ p }}">{{ p }}</a>
+                </li>
+            {% endfor %}
+
+            <li class="page-item {% if not has_next %}disabled{% endif %}">
+                <a class="page-link" href="#" data-page="{{ page + 1 }}" {% if not has_next %}tabindex="-1" aria-disabled="true"{% endif %}>
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</div>
+{% endif %}

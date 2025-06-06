@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Категории | Helpdesk{% endblock %}
+{% block page_title %}Управление категориями{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between mb-4">
+    <h4><i class="fas fa-tags me-2"></i>Категории заявок</h4>
+    {% if current_user.role == 'curator' %}
+    <a href="{{ url_for('create_category') }}" class="btn btn-success">
+        <i class="fas fa-plus-circle me-1"></i> Добавить категорию
+    </a>
+    {% endif %}
+</div>
+
+<div class="table-container">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Название</th>
+                <th>Описание</th>
+                <th>Статус</th>
+                <th>Дата создания</th>
+                {% if current_user.role == 'curator' %}
+                <th>Действия</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% if categories %}
+                {% for category in categories %}
+                <tr>
+                    <td>{{ category.id }}</td>
+                    <td>{{ category.name }}</td>
+                    <td>{{ category.description or '-' }}</td>
+                    <td>
+                        {% if category.is_active %}
+                            <span class="badge bg-success">Активна</span>
+                        {% else %}
+                            <span class="badge bg-danger">Отключена</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ category.created_at|datetime }}</td>
+                    {% if current_user.role == 'curator' %}
+                    <td>
+                        <a href="{{ url_for('edit_category', category_id=category.id) }}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="{% if current_user.role == 'curator' %}6{% else %}5{% endif %}" class="text-center py-4">Категории не найдены</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

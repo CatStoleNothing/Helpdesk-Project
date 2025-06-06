@@ -1,0 +1,480 @@
+{% extends "base.html" %}
+
+{% block title %}Заявки | Helpdesk{% endblock %}
+{% block page_title %}Управление заявками{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card filter-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-filter me-2"></i> Фильтры</h5>
+                <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="true" aria-controls="filterCollapse">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+            <div class="collapse show" id="filterCollapse">
+                <div class="card-body">
+                    <form id="ticketFilterForm" method="GET" action="{{ url_for('tickets') }}">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label for="title" class="form-label">Заголовок</label>
+                                <input type="text" class="form-control" id="title" name="title" value="{{ filter_params.title }}" placeholder="Поиск по заголовку">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="description" class="form-label">Описание</label>
+                                <input type="text" class="form-control" id="description" name="description" value="{{ filter_params.description }}" placeholder="Поиск по содержимому">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="status" class="form-label">Статус</label>
+                                <select class="form-select" id="status" name="status">
+                                    <option value="all" {% if filter_params.status == 'all' %}selected{% endif %}>Все</option>
+                                    <option value="new" {% if filter_params.status == 'new' %}selected{% endif %}>Новые</option>
+                                    <option value="in_progress" {% if filter_params.status == 'in_progress' %}selected{% endif %}>В работе</option>
+                                    <option value="resolved" {% if filter_params.status == 'resolved' %}selected{% endif %}>Решенные</option>
+                                    <option value="irrelevant" {% if filter_params.status == 'irrelevant' %}selected{% endif %}>Неактуальные</option>
+                                    <option value="closed" {% if filter_params.status == 'closed' %}selected{% endif %}>Закрытые</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="assignee_id" class="form-label">Исполнитель</label>
+                                <select class="form-select" id="assignee_id" name="assignee_id">
+                                    <option value="all" {% if filter_params.assignee == 'all' %}selected{% endif %}>Все</option>
+                                    <option value="me" {% if filter_params.assignee == 'me' %}selected{% endif %}>Назначенные мне</option>
+                                    <option value="unassigned" {% if filter_params.assignee == 'unassigned' %}selected{% endif %}>Без исполнителя</option>
+                                    {% for staff in all_staff %}
+                                        {% if staff.role in ['admin', 'curator'] %}
+                                            <option value="{{ staff.id }}" {% if filter_params.assignee|string == staff.id|string %}selected{% endif %}>{{ staff.full_name }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="date_from" class="form-label">Дата с</label>
+                                <input type="date" class="form-control" id="date_from" name="date_from" value="{{ filter_params.date_from }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="date_to" class="form-label">Дата по</label>
+                                <input type="date" class="form-control" id="date_to" name="date_to" value="{{ filter_params.date_to }}">
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-12 text-end">
+                                <button type="button" class="btn btn-outline-secondary me-2" id="resetFilters">
+                                    <i class="fas fa-eraser me-1"></i> Сбросить
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search me-1"></i> Применить
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-ticket-alt me-2"></i> Список заявок</h5>
+                <a href="{{ url_for('create_ticket') }}" class="btn btn-sm btn-success">
+                    <i class="fas fa-plus-circle me-1"></i> Новая заявка
+                </a>
+            </div>
+            <div class="card-body">
+                <div id="tickets-list">
+                    {% include 'includes/tickets_table_fragment.html' %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Контекстное меню -->
+<div class="context-menu" id="ticketContextMenu">
+    <div class="context-menu-item view-ticket">
+        <i class="fas fa-eye"></i> Просмотреть
+    </div>
+    <div class="context-menu-divider"></div>
+    <div class="context-menu-item change-priority">
+        <i class="fas fa-exclamation-triangle"></i> Изменить приоритет
+        <span class="submenu-arrow"><i class="fas fa-chevron-right"></i></span>
+        <div class="context-submenu priority-submenu">
+            <div class="context-menu-item priority-low" data-priority="low">
+                <span class="badge priority-low">Низкий</span>
+            </div>
+            <div class="context-menu-item priority-normal" data-priority="normal">
+                <span class="badge priority-normal">Средний</span>
+            </div>
+            <div class="context-menu-item priority-high" data-priority="high">
+                <span class="badge priority-high">Высокий</span>
+            </div>
+        </div>
+    </div>
+    <div class="context-menu-item change-category">
+        <i class="fas fa-tags"></i> Изменить категорию
+        <span class="submenu-arrow"><i class="fas fa-chevron-right"></i></span>
+        <div class="context-submenu category-submenu" id="categorySubmenu">
+            <!-- Будет заполнено через JavaScript -->
+        </div>
+    </div>
+    <div class="context-menu-divider"></div>
+    <div class="context-menu-item change-status">
+        <i class="fas fa-exchange-alt"></i> Изменить статус
+        <span class="submenu-arrow"><i class="fas fa-chevron-right"></i></span>
+        <div class="context-submenu status-submenu">
+            <div class="context-menu-item status-new" data-status="new">
+                <span class="badge status-new">Новая</span>
+            </div>
+            <div class="context-menu-item status-in_progress" data-status="in_progress">
+                <span class="badge status-in_progress">В работе</span>
+            </div>
+            <div class="context-menu-item status-resolved" data-status="resolved">
+                <span class="badge status-resolved">Решена</span>
+            </div>
+            <div class="context-menu-item status-irrelevant" data-status="irrelevant">
+                <span class="badge status-irrelevant">Неактуально</span>
+            </div>
+            <div class="context-menu-item status-closed" data-status="closed">
+                <span class="badge status-closed">Закрыта</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для подтверждения изменения статуса -->
+<div class="modal fade" id="statusChangeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Изменение статуса заявки</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Вы уверены, что хотите изменить статус заявки?</p>
+                <form id="statusChangeForm">
+                    <input type="hidden" id="ticketIdForStatus" name="ticket_id">
+                    <input type="hidden" id="newStatus" name="status">
+                    <div class="mb-3">
+                        <label for="statusChangeReason" class="form-label">Причина изменения</label>
+                        <textarea class="form-control" id="statusChangeReason" name="reason" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" id="confirmStatusChange">Подтвердить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Обработчик сброса фильтров
+    document.getElementById('resetFilters').addEventListener('click', function() {
+        document.getElementById('title').value = '';
+        document.getElementById('description').value = '';
+        document.getElementById('status').value = 'all';
+        document.getElementById('assignee_id').value = 'all';
+        document.getElementById('date_from').value = '';
+        document.getElementById('date_to').value = '';
+        document.getElementById('ticketFilterForm').submit();
+    });
+
+    // Обработчик пагинации без перезагрузки
+    document.querySelectorAll('.pagination .page-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const page = this.getAttribute('data-page');
+            loadTicketsPage(page);
+        });
+    });
+
+    // Загрузка списка категорий для контекстного меню
+    fetch('/categories')
+        .then(response => response.json())
+        .then(data => {
+            const categorySubmenu = document.getElementById('categorySubmenu');
+            data.forEach(category => {
+                const menuItem = document.createElement('div');
+                menuItem.className = 'context-menu-item';
+                menuItem.dataset.categoryId = category.id;
+                menuItem.innerHTML = `<span>${category.name}</span>`;
+                menuItem.addEventListener('click', function() {
+                    changeTicketCategory(currentTicketId, category.id);
+                });
+                categorySubmenu.appendChild(menuItem);
+            });
+        })
+        .catch(error => console.error('Ошибка при загрузке категорий:', error));
+
+    // Функции для работы с контекстным меню
+    let currentTicketId = null;
+    const contextMenu = document.getElementById('ticketContextMenu');
+
+    // Отображение контекстного меню
+    document.addEventListener('contextmenu', function(e) {
+        const ticketRow = e.target.closest('tr');
+        if (ticketRow) {
+            e.preventDefault();
+            currentTicketId = ticketRow.querySelector('td:first-child').textContent;
+
+            // Позиционирование меню
+            contextMenu.style.left = `${e.pageX}px`;
+            contextMenu.style.top = `${e.pageY}px`;
+            contextMenu.classList.add('show');
+
+            // Закрытие подменю
+            document.querySelectorAll('.context-submenu').forEach(submenu => {
+                submenu.classList.remove('show');
+            });
+        }
+    });
+
+    // Скрытие контекстного меню при клике вне его
+    document.addEventListener('click', function() {
+        contextMenu.classList.remove('show');
+    });
+
+    // Предотвращение скрытия при клике внутри меню
+    contextMenu.addEventListener('click', function(e) {
+        e.stopPropagation();
+    });
+
+    // Обработчики для подменю
+    document.querySelectorAll('.context-menu-item:not(.priority-low):not(.priority-normal):not(.priority-high):not(.status-new):not(.status-in_progress):not(.status-resolved):not(.status-irrelevant):not(.status-closed)').forEach(item => {
+        item.addEventListener('mouseover', function() {
+            // Закрыть все открытые подменю
+            document.querySelectorAll('.context-submenu').forEach(submenu => {
+                submenu.classList.remove('show');
+            });
+
+            // Открыть соответствующее подменю
+            const submenu = this.querySelector('.context-submenu');
+            if (submenu) {
+                submenu.classList.add('show');
+            }
+        });
+    });
+
+    // Обработчик для просмотра заявки
+    document.querySelector('.context-menu-item.view-ticket').addEventListener('click', function() {
+        if (currentTicketId) {
+            window.location.href = `/ticket/${currentTicketId}`;
+        }
+    });
+
+    // Обработчики для изменения приоритета
+    document.querySelectorAll('.priority-submenu .context-menu-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const priority = this.getAttribute('data-priority');
+            if (currentTicketId && priority) {
+                changeTicketPriority(currentTicketId, priority);
+            }
+        });
+    });
+
+    // Обработчики для изменения статуса
+    document.querySelectorAll('.status-submenu .context-menu-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const status = this.getAttribute('data-status');
+            if (currentTicketId && status) {
+                document.getElementById('ticketIdForStatus').value = currentTicketId;
+                document.getElementById('newStatus').value = status;
+                const statusModal = new bootstrap.Modal(document.getElementById('statusChangeModal'));
+                statusModal.show();
+            }
+        });
+    });
+
+    // Подтверждение изменения статуса
+    document.getElementById('confirmStatusChange').addEventListener('click', function() {
+        const ticketId = document.getElementById('ticketIdForStatus').value;
+        const status = document.getElementById('newStatus').value;
+        const reason = document.getElementById('statusChangeReason').value;
+
+        if (ticketId && status) {
+            changeTicketStatus(ticketId, status, reason);
+            bootstrap.Modal.getInstance(document.getElementById('statusChangeModal')).hide();
+        }
+    });
+
+    // Функция для изменения приоритета заявки
+    function changeTicketPriority(ticketId, priority) {
+        fetch(`/ticket/${ticketId}/change_priority`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: `priority=${priority}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Обновляем UI без перезагрузки
+                const priorityCell = document.querySelector(`tr td:first-child:contains("${ticketId}")`).parentNode.querySelector('td:nth-child(6)');
+                priorityCell.innerHTML = `<span class="badge priority-${priority}">
+                    ${priority === 'low' ? 'Низкий' : (priority === 'normal' ? 'Средний' : 'Высокий')}
+                </span>`;
+                showToast('Приоритет заявки успешно изменен', 'success');
+            } else {
+                showToast(data.error || 'Ошибка при изменении приоритета', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка при изменении приоритета:', error);
+            showToast('Ошибка при изменении приоритета', 'error');
+        });
+    }
+
+    // Функция для изменения категории заявки
+    function changeTicketCategory(ticketId, categoryId) {
+        fetch(`/ticket/${ticketId}/change_category`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: `category_id=${categoryId}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Обновляем UI без перезагрузки
+                const categoryCell = document.querySelector(`tr td:first-child:contains("${ticketId}")`).parentNode.querySelector('td:nth-child(5)');
+                categoryCell.textContent = data.category_name;
+                showToast('Категория заявки успешно изменена', 'success');
+            } else {
+                showToast(data.error || 'Ошибка при изменении категории', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка при изменении категории:', error);
+            showToast('Ошибка при изменении категории', 'error');
+        });
+    }
+
+    // Функция для изменения статуса заявки
+    function changeTicketStatus(ticketId, status, reason) {
+        fetch(`/ticket/${ticketId}/change_status`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: `status=${status}&reason=${encodeURIComponent(reason)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Обновляем UI без перезагрузки
+                const statusCell = document.querySelector(`tr td:first-child:contains("${ticketId}")`).parentNode.querySelector('td:nth-child(7)');
+                statusCell.innerHTML = `<span class="badge status-${status}">
+                    ${status === 'new' ? 'Новая' :
+                     (status === 'in_progress' ? 'В работе' :
+                     (status === 'resolved' ? 'Решена' :
+                     (status === 'irrelevant' ? 'Неактуально' : 'Закрыта')))}
+                </span>`;
+                showToast('Статус заявки успешно изменен', 'success');
+            } else {
+                showToast(data.error || 'Ошибка при изменении статуса', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка при изменении статуса:', error);
+            showToast('Ошибка при изменении статуса', 'error');
+        });
+    }
+
+    // Функция для загрузки списка заявок без перезагрузки страницы
+    function loadTicketsPage(page) {
+        const formData = new FormData(document.getElementById('ticketFilterForm'));
+        formData.append('page', page);
+
+        fetch('/tickets/fragment', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('tickets-list').innerHTML = html;
+
+            // Обновляем обработчики пагинации
+            document.querySelectorAll('.pagination .page-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const page = this.getAttribute('data-page');
+                    loadTicketsPage(page);
+                });
+            });
+        })
+        .catch(error => {
+            console.error('Ошибка при загрузке списка заявок:', error);
+        });
+    }
+
+    // Функция для отображения уведомлений
+    function showToast(message, type) {
+        const toastContainer = document.getElementById('toastContainer') || createToastContainer();
+        const toast = document.createElement('div');
+        toast.className = `toast bg-${type === 'error' ? 'danger' : 'success'} text-white`;
+        toast.setAttribute('role', 'alert');
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+
+        toast.innerHTML = `
+            <div class="toast-header bg-${type === 'error' ? 'danger' : 'success'} text-white">
+                <strong class="me-auto">${type === 'error' ? 'Ошибка' : 'Успешно'}</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                ${message}
+            </div>
+        `;
+
+        toastContainer.appendChild(toast);
+        const bsToast = new bootstrap.Toast(toast, { delay: 5000 });
+        bsToast.show();
+
+        // Удаление тоста после скрытия
+        toast.addEventListener('hidden.bs.toast', function() {
+            this.remove();
+        });
+    }
+
+    // Создание контейнера для уведомлений
+    function createToastContainer() {
+        const container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        container.style.zIndex = '9999';
+        document.body.appendChild(container);
+        return container;
+    }
+
+    // Поддержка для jQuery-подобного :contains селектора
+    const originalQuerySelectorAll = document.querySelectorAll;
+    document.querySelectorAll = function(selector) {
+        if (selector.includes(':contains(')) {
+            const parts = selector.split(':contains(');
+            const baseSelector = parts[0];
+            const searchText = parts[1].slice(0, -1).replace(/"/g, '');
+
+            const elements = originalQuerySelectorAll.call(document, baseSelector);
+            return Array.from(elements).filter(el =>
+                el.textContent.trim() === searchText.trim()
+            );
+        }
+        return originalQuerySelectorAll.call(document, selector);
+    };
+});
+</script>
+{% endblock %}
+
+{% endblock %}
