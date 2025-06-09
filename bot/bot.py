@@ -143,45 +143,6 @@ async def check_user_status(chat_id: str, db: Session):
     # Все проверки пройдены
     return True, None, user
 
-# Helper function to add audit log entry
-def add_audit_log(db: Session, actor_id: str, actor_name: str, action_type: str,
-                  description: str, entity_type: str = None, entity_id: str = None,
-                  is_pdn_related: bool = False, ip_address: str = None, details: str = None):
-    """
-    Добавляет запись в журнал аудита
-
-    Args:
-        db: Сессия базы данных
-        actor_id: ID пользователя, выполнившего действие (chat_id)
-        actor_name: Имя пользователя
-        action_type: Тип действия (create, update, delete, login, etc.)
-        description: Описание действия
-        entity_type: Тип сущности (user, ticket, etc.)
-        entity_id: ID сущности, связанной с действием
-        is_pdn_related: Связано ли с обработкой ПДн (для аудита по 152-ФЗ)
-        ip_address: IP-адрес пользователя
-        details: Дополнительные детали (JSON или текст)
-    """
-    try:
-        log_entry = AuditLog(
-            actor_id=str(actor_id),
-            actor_name=actor_name,
-            action_type=action_type,
-            description=description,
-            entity_type=entity_type,
-            entity_id=str(entity_id) if entity_id is not None else None,
-            is_pdn_related=is_pdn_related,
-            ip_address=ip_address,
-            details=details,
-            timestamp=datetime.datetime.utcnow()
-        )
-        db.add(log_entry)
-        db.commit()
-        return True
-    except Exception as e:
-        logging.error(f"Ошибка при добавлении записи в журнал аудита: {str(e)}")
-        return False
-
 # Функции для отправки уведомлений
 async def send_notification(chat_id: str, message: str):
     """
@@ -612,9 +573,7 @@ async def process_phone(message: types.Message, state: FSMContext):
 @dp.message(RegistrationStates.waiting_for_email)
 async def process_email(message: types.Message, state: FSMContext):
     user_db = SessionLocal()
-
     try:
-        # Сохраняем email, если он был введен
         email = None
         if message.text != "-":
             email = message.text
@@ -622,7 +581,19 @@ async def process_email(message: types.Message, state: FSMContext):
         await state.update_data(email=email)
         data = await state.get_data()
 
-        # Create new user with is_confirmed=False
+        # --- Проверка на существующего пользователя ---
+        existing_user = user_db.query(User).filter(
+            (User.chat_id == str(message.chat.id)) | (User.email == email)
+        ).first()
+        if existing_user:
+            await message.answer(
+                "Пользователь с таким Telegram уже зарегистрирован или email уже используется.\n"
+                "Если вы считаете, что это ошибка — обратитесь к администратору."
+            )
+            await state.clear()
+            return
+
+        # --- Создание нового пользователя ---
         new_user = User(
             full_name=data['full_name'],
             position=data['position'],
@@ -631,28 +602,15 @@ async def process_email(message: types.Message, state: FSMContext):
             phone=data.get('phone'),
             email=data.get('email'),
             chat_id=str(message.chat.id),
-            role="agent",  # Default role
+            role="agent",
             privacy_consent=data.get('privacy_consent', False),
             consent_date=data.get('consent_date'),
-            is_confirmed=False,  # Добавляем флаг - требуется подтверждение администратором
-            is_active=True  # Пользователь активен, но не подтвержден
+            is_confirmed=False,
+            is_active=True
         )
 
         user_db.add(new_user)
         user_db.commit()
-
-        # Добавляем запись в журнал аудита о регистрации пользователя
-        add_audit_log(
-            user_db,
-            new_user.chat_id,
-            new_user.full_name,
-            "user_registration",
-            f"Зарегистрирован новый пользователь: {new_user.full_name}",
-            "user",
-            new_user.id,
-            is_pdn_related=True,
-            details=f"Должность: {new_user.position}, Отделение: {new_user.department}, Кабинет: {new_user.office}"
-        )
 
         await message.answer(
             f"Регистрация успешно завершена, {new_user.full_name}!✅\n\n"
@@ -701,16 +659,6 @@ async def new_ticket(message: types.Message, state: FSMContext):
                            reply_markup=keyboard.as_markup())
         await state.set_state(TicketStates.waiting_for_category)
         await update_user_activity(message.chat.id, state)  # Update user activity
-
-        # Логируем попытку создания тикета
-        add_audit_log(
-            user_db,
-            str(message.chat.id),
-            user.full_name,
-            "start_ticket_creation",
-            "Пользователь начал создание новой заявки",
-            "ticket"
-        )
     finally:
         user_db.close()
         ticket_db.close()
@@ -741,18 +689,6 @@ async def process_category_selection(callback: CallbackQuery, state: FSMContext)
 
         # Check user status
         status, _, user = await check_user_status(callback.message.chat.id, user_db)
-        if status and user:
-            # Audit log
-            add_audit_log(
-                ticket_db,
-                str(callback.message.chat.id),
-                user.full_name,
-                "select_ticket_category",
-                f"Пользователь выбрал категорию заявки: {category.name}",
-                "ticket_category",
-                category_id
-            )
-
         await callback.answer()
         await update_user_activity(callback.message.chat.id, state)
     finally:
@@ -972,17 +908,6 @@ async def finish_attachments(message: types.Message, state: FSMContext):
             ticket_db.add(attachment)
         ticket_db.commit()
 
-        # Audit log
-        add_audit_log(
-            ticket_db,
-            str(message.chat.id),
-            user.full_name,
-            "create_ticket",
-            f"Пользователь создал новую заявку: {ticket.title}",
-            "ticket",
-            ticket.id
-        )
-
         await message.answer(f"Заявка <b>#{ticket.id}</b> успешно создана!\n\n"
                              f"Заголовок: <b>{ticket.title}</b>\n"
                              f"Категория: <b>{data.get('category_name')}</b>\n"
@@ -1069,16 +994,6 @@ async def process_select_ticket(callback: CallbackQuery, state: FSMContext):
         await display_last_10_messages(ticket_id, callback.from_user.id, bot, ticket_db, state)
         await state.update_data(active_ticket_id=ticket_id)
         await state.set_state(ActiveTicketStates.chatting)
-        # Audit log
-        add_audit_log(
-            ticket_db,
-            str(callback.from_user.id),
-            user.full_name,
-            "select_active_ticket",
-            f"Пользователь выбрал активную заявку: #{ticket.id} - {ticket.title}",
-            "ticket",
-            ticket.id
-        )
         await callback.answer()
     finally:
         ticket_db.close()
@@ -1234,18 +1149,6 @@ async def handle_new_message_from_site(ticket_id: int, sender_name: str, message
             return
         # Если активная заявка совпадает — пересылать как обычно
         await display_last_10_messages(ticket_id, int(chat_id), bot, ticket_db, user_fsm_context)
-
-        # Audit log
-        add_audit_log(
-            db=ticket_db,
-            actor_id="website_system",
-            actor_name=sender_name,
-            action_type="receive_site_message",
-            description=f"Получено сообщение с сайта для заявки #{ticket_id}: {message_text[:50]}...",
-            entity_type="ticket_message",
-            entity_id=new_msg.id,
-            details=f"Ticket ID: {ticket_id}, Sender: {sender_name}"
-        )
 
     except Exception as e:
         logging.error(f"Ошибка при обработке сообщения с сайта для заявки {ticket_id}: {e}")
@@ -1432,18 +1335,6 @@ async def show_profile(message: types.Message, state: FSMContext):
 
         await message.answer(profile_text, parse_mode="HTML")
         await update_user_activity(message.chat.id, state)  # Update user activity
-
-        # Логируем просмотр профиля в аудит
-        add_audit_log(
-            user_db,
-            str(message.chat.id),
-            user.full_name,
-            "view_profile",
-            f"Пользователь просмотрел свой профиль",
-            "user",
-            user.id,
-            is_pdn_related=True
-        )
 
     finally:
         user_db.close()

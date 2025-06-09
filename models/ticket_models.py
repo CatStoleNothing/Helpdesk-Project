@@ -10,7 +10,7 @@ class TicketCategory(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False, unique=True)
     description = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
     is_active = Column(Boolean, default=True)
 
     # Relationship with Ticket
@@ -22,8 +22,8 @@ class Ticket(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(100), nullable=False)
     description = Column(Text, nullable=False)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), onupdate=lambda: datetime.datetime.now(datetime.timezone.utc))
     status = Column(String(20), default="new")  # new, in_progress, resolved, closed, irrelevant
     creator_chat_id = Column(String(50), nullable=False)
     assignee_id = Column(Integer, ForeignKey("users.id"), nullable=True)  # Ссылка на пользователя-исполнителя
@@ -51,7 +51,7 @@ class Attachment(Base):
     file_path = Column(String(255), nullable=False)
     file_name = Column(String(255), nullable=False)
     file_type = Column(String(50), nullable=True)
-    upload_date = Column(DateTime, default=datetime.datetime.utcnow)
+    upload_date = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
     is_image = Column(Boolean, default=False)  # Flag to identify image files
     message_id = Column(Integer, ForeignKey("messages.id"), nullable=True)  # Optional link to a specific message
 
@@ -68,7 +68,7 @@ class Message(Base):
     content = Column(Text, nullable=False)  # Содержимое сообщения
     is_from_user = Column(Boolean, default=False)  # Сообщение от пользователя (true) или от администратора (false)
     is_internal = Column(Boolean, default=False)  # Внутреннее сообщение (true) - только для админов, (false) - видно всем
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
     is_pinned = Column(Boolean, default=False)  # Закрепленное сообщение
 
     # Relationship with Ticket
@@ -87,7 +87,7 @@ class AuditLog(Base):
     description = Column(Text, nullable=False)  # Описание действия
     entity_type = Column(String(50), nullable=True)  # Тип сущности (user, ticket, etc.)
     entity_id = Column(String(50), nullable=True)  # ID сущности, связанной с действием
-    timestamp = Column(DateTime, default=datetime.datetime.utcnow)  # Время действия
+    timestamp = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))  # Время действия
     is_pdn_related = Column(Boolean, default=False)  # Связано ли с обработкой ПДн (для аудита по 152-ФЗ)
     ip_address = Column(String(50), nullable=True)  # IP-адрес пользователя
     details = Column(Text, nullable=True)  # Дополнительные детали (JSON или текст)
@@ -99,7 +99,7 @@ class DashboardMessage(Base):
     sender_id = Column(String(50), nullable=False)  # ID пользователя
     sender_name = Column(String(100), nullable=False)  # Имя отправителя
     content = Column(Text, nullable=False)  # Содержимое сообщения
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
     is_pinned = Column(Boolean, default=False)  # Закрепленное сообщение
 
     # Relationship with DashboardAttachment
@@ -113,7 +113,7 @@ class DashboardAttachment(Base):
     file_path = Column(String(255), nullable=False)
     file_name = Column(String(255), nullable=False)
     file_type = Column(String(50), nullable=True)
-    upload_date = Column(DateTime, default=datetime.datetime.utcnow)
+    upload_date = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     # Relationship with DashboardMessage
     message = relationship("DashboardMessage", back_populates="attachments")

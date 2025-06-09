@@ -4,6 +4,12 @@
 {% block page_title %}Управление пользователями{% endblock %}
 
 {% block content %}
+{% set role_names = {
+    'admin': 'Администратор',
+    'curator': 'Куратор',
+    'agent': 'Пользователь'
+} %}
+
 <div class="d-flex justify-content-between mb-4">
     <h4><i class="fas fa-users me-2"></i>Список пользователей</h4>
     <a href="{{ url_for('create_user') }}" class="btn btn-success">
@@ -37,7 +43,7 @@
                     <td>{{ user.department }}</td>
                     <td>
                         <span class="badge bg-{{ 'primary' if user.role == 'curator' else 'info' if user.role == 'admin' else 'secondary' }}">
-                            {{ user.role }}
+                            {{ role_names.get(user.role, user.role) }}
                         </span>
                     </td>
                     <td>
