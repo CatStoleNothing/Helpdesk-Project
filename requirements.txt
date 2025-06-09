@@ -1,0 +1,10 @@
+Flask
+SQLAlchemy
+aiogram
+passlib
+python-dotenv
+requests
+alembic
+nest_asyncio
+Flask-Login
+pytz
