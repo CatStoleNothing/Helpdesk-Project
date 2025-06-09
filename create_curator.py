@@ -43,13 +43,6 @@ def create_curator(chat_id=None, password=None):
     if password is None:
         password = os.getenv("CURATOR_PASSWORD")
 
-    if not password:
-        logger.error(
-            "Не указан пароль куратора. Передайте его через --password или \n"
-            "переменную окружения CURATOR_PASSWORD"
-        )
-        return False
-
     user_db = SessionLocal()
     try:
         # Проверяем, существует ли уже пользователь SNA

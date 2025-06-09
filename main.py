@@ -19,11 +19,6 @@ logger = logging.getLogger(__name__)
 
 # Запуск миграции базы данных при старте
 logger.info("Запускаем миграцию базы данных...")
-# migration_result = run_all_migrations()
-# if migration_result:
-#     logger.info("Миграция базы данных выполнена успешно.")
-# else:
-#     logger.warning("Во время миграции базы данных произошли ошибки. Приложение может работать некорректно.")
 
 def run_bot_thread():
     logger.info("Запускаем Telegram бота...")
