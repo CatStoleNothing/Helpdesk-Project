@@ -215,7 +215,7 @@
         <!-- Форма фильтрации -->
         <form method="get" class="row g-3 mb-3">
             <input type="hidden" name="active_tab" value="history">
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label for="actor_id" class="form-label">Пользователь</label>
                 <select class="form-select" id="actor_id" name="actor_id">
                     <option value="">Все</option>
@@ -224,7 +224,7 @@
                     {% endfor %}
                 </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label for="action_type" class="form-label">Действие</label>
                 <select class="form-select" id="action_type" name="action_type">
                     <option value="">Все</option>
@@ -232,6 +232,10 @@
                         <option value="{{ atype }}" {% if filter_params.action_type == atype %}selected{% endif %}>{{ action_type_labels.get(atype, atype) }}</option>
                     {% endfor %}
                 </select>
+            </div>
+            <div class="col-md-2">
+                <label for="user_id" class="form-label">ID пользователя</label>
+                <input type="number" class="form-control" id="user_id" name="user_id" value="{{ filter_params.user_id }}">
             </div>
             <div class="col-md-2">
                 <label for="date_from" class="form-label">Дата с</label>

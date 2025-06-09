@@ -296,12 +296,20 @@ def registration_approval():
     action_type = request.args.get('action_type', '').strip()
     date_from = request.args.get('date_from', '').strip()
     date_to = request.args.get('date_to', '').strip()
+    filter_user_id = request.args.get('user_id', type=int)
+    if filter_user_id is None:
+        filter_user_id = request.args.get('target_id', type=int)
 
     actions_query = ticket_db.query(AuditLog).filter(AuditLog.entity_type.in_(['user', 'ticket']))
     if actor_id:
         actions_query = actions_query.filter(AuditLog.actor_id == actor_id)
     if action_type:
         actions_query = actions_query.filter(AuditLog.action_type == action_type)
+    if filter_user_id:
+        actions_query = actions_query.filter(
+            AuditLog.entity_id == str(filter_user_id),
+            AuditLog.entity_type == 'user'
+        )
     if date_from:
         from_dt = datetime.strptime(date_from, '%Y-%m-%d')
         actions_query = actions_query.filter(AuditLog.timestamp >= from_dt)
@@ -328,7 +336,8 @@ def registration_approval():
             'actor_id': actor_id,
             'action_type': action_type,
             'date_from': date_from,
-            'date_to': date_to
+            'date_to': date_to,
+            'user_id': filter_user_id
         }
     )
 
