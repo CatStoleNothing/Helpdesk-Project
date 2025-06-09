@@ -37,47 +37,6 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # Initialization flag
 _DEPENDENCIES_LOADED = True
 
-try:
-    import logging
-    import os
-    import re
-    import nest_asyncio
-    import asyncio.exceptions
-    from aiogram import Bot, Dispatcher, types, F
-    from aiogram.filters import Command, CommandObject
-    from aiogram.fsm.storage.memory import MemoryStorage
-    from aiogram.fsm.context import FSMContext
-    from aiogram.fsm.state import State, StatesGroup
-    from aiogram.utils.keyboard import InlineKeyboardBuilder
-    from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
-    from sqlalchemy.orm import Session
-    from typing import List, Optional
-    import sys
-    import datetime
-    import asyncio
-    from aiogram.exceptions import TelegramAPIError
-    import requests
-    import json
-    from dotenv import load_dotenv
-
-    # Configure logging
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
-
-    # Initialization flag
-    _DEPENDENCIES_LOADED = True
-
-except ImportError as e:
-    import sys
-    import logging
-
-    # Configure basic logging
-    logging.basicConfig(level=logging.INFO,
-                        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                        handlers=[logging.StreamHandler(sys.stdout)])
-
-    logging.error(f"Failed to import dependencies: {str(e)}")
-    _DEPENDENCIES_LOADED = False
-
 # Initialize bot and dispatcher
 API_TOKEN = os.getenv("TELEGRAM_API_TOKEN", "")
 bot = Bot(token=API_TOKEN)
@@ -143,45 +102,7 @@ async def check_user_status(chat_id: str, db: Session):
     # Все проверки пройдены
     return True, None, user
 
-# Функции для отправки уведомлений
-async def send_notification(chat_id: str, message: str):
-    """
-    Асинхронная функция для отправки уведомлений пользователям через Telegram бота
-    """
-    try:
-        if not API_TOKEN:
-            logging.error("Telegram bot token is not configured")
-            return False
-
-        await bot.send_message(chat_id=chat_id, text=message, parse_mode="HTML")
-        return True
-    except TelegramAPIError as e:
-        logging.error(f"Failed to send notification to {chat_id}: {str(e)}")
-        return False
-    except Exception as e:
-        logging.error(f"Error sending notification: {str(e)}")
-        return False
-
-def sync_send_notification(chat_id: str, message: str):
-    """
-    Синхронная обертка для отправки уведомлений
-    """
-    try:
-        if not API_TOKEN:
-            logging.error("Telegram bot token is not configured")
-            return False
-
-        # Используем loop для запуска асинхронной функции
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        result = loop.run_until_complete(send_notification(chat_id, message))
-        loop.close()
-        return result
-    except Exception as e:
-        logging.error(f"Error in sync notification sender: {str(e)}")
-        return False
-
-# Synchronous function to send notification using requests
+# Функция для отправки уведомлений (синхронная)
 def sync_send_notification(chat_id, message):
     if not chat_id:
         logging.error(f"Невозможно отправить сообщение: chat_id отсутствует")
