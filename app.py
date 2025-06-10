@@ -8,7 +8,7 @@ import threading
 import logging
 import nest_asyncio
 from sqlalchemy.orm import joinedload
-import pytz
+import hashlib  # Add hashlib for message deduplication
 
 from models.db_init import init_db, SessionLocal
 from models.user_models import User
@@ -20,6 +20,7 @@ from sqlalchemy import func, desc
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+import uuid
 
 # Import bot notification function
 from bot.bot import sync_send_notification
@@ -29,13 +30,7 @@ load_dotenv()
 
 # Initialize Flask app
 app = Flask(__name__)
-
-# Check that SECRET_KEY is provided
-secret_key = os.environ.get("SECRET_KEY")
-if not secret_key:
-    logging.error("SECRET_KEY environment variable is not set. Exiting.")
-    raise SystemExit("SECRET_KEY is required")
-app.secret_key = secret_key
+app.secret_key = os.environ.get("SECRET_KEY", "your-secret-key-here")
 
 # Добавляем фильтр datetime
 @app.template_filter('datetime')
@@ -291,6 +286,7 @@ def registration_approval():
     rejected_users = db.query(User).filter(User.is_active == False).all()
     approved_users = db.query(User).filter(User.is_confirmed == True, User.is_active == True).all()
 
+<<<<<<< Updated upstream
     # --- Фильтрация истории действий ---
     actor_id = request.args.get('actor_id', '').strip()
     action_type = request.args.get('action_type', '').strip()
@@ -340,6 +336,14 @@ def registration_approval():
             'user_id': filter_user_id
         }
     )
+=======
+    # История одобрения/отклонения - используем ticket_db для AuditLog
+    actions = ticket_db.query(AuditLog).filter(AuditLog.entity_type=='user').order_by(AuditLog.timestamp.desc()).limit(50).all()
+
+    db.close()
+    ticket_db.close()  # Закрываем сессию базы данных для аудита
+    return render_template('registration_approval.html', new_users=new_users, rejected_users=rejected_users, approved_users=approved_users, actions=actions)
+>>>>>>> Stashed changes
 
 @app.route('/edit_user/<int:user_id>', methods=['GET', 'POST'])
 @login_required_role(['curator'])
@@ -350,16 +354,6 @@ def edit_user(user_id):
         db.close()
         abort(404)
     if request.method == 'POST':
-        # Сохраняем старые значения
-        old_data = {
-            'full_name': user.full_name,
-            'username': user.username,
-            'position': user.position,
-            'department': user.department,
-            'office': user.office,
-            'role': user.role,
-            'chat_id': user.chat_id
-        }
         user.full_name = request.form.get('full_name', user.full_name).strip()
         user.username  = request.form.get('username',  user.username).strip()
         user.position  = request.form.get('position',  user.position).strip()
@@ -371,28 +365,6 @@ def edit_user(user_id):
         if pwd:
             user.password_hash = User.get_password_hash(pwd)
         db.commit()
-        # Формируем описание изменений
-        changes = []
-        for field, old_value in old_data.items():
-            new_value = getattr(user, field)
-            if old_value != new_value:
-                changes.append(f"{field}: '{old_value}' → '{new_value}'")
-        if pwd:
-            changes.append("password: [изменён]")
-        if changes:
-            description = f"Изменены поля: {', '.join(changes)}"
-            audit_log = AuditLog(
-                actor_id=str(current_user.id),
-                actor_name=current_user.full_name,
-                action_type="edit_user",
-                description=description,
-                entity_type="user",
-                entity_id=str(user.id),
-                is_pdn_related=True,
-                timestamp=get_moscow_time()
-            )
-            db.add(audit_log)
-            db.commit()
         db.close()
         flash('Пользователь обновлён', 'success')
         return redirect(url_for('users'))
@@ -453,26 +425,29 @@ def change_ticket_category(ticket_id):
         if not category:
             return jsonify({"success": False, "error": "Категория не найдена"}), 404
 
-        old_category_id = ticket.category_id
         old_category_name = "Не указана"
-        if old_category_id:
-            old_category = db.query(TicketCategory).filter(TicketCategory.id == old_category_id).first()
+        if ticket.category_id:
+            old_category = db.query(TicketCategory).filter(TicketCategory.id == ticket.category_id).first()
             if old_category:
                 old_category_name = old_category.name
-        if old_category_id != category.id:
-            ticket.category_id = category.id
-            audit_log = AuditLog(
-                actor_id=str(current_user.id),
-                actor_name=current_user.full_name,
-                action_type="change_category",
-                description=f"Изменена категория заявки #{ticket_id} с '{old_category_name}' на '{category.name}'",
-                entity_type="ticket",
-                entity_id=str(ticket_id),
-                is_pdn_related=False,
-                timestamp=get_moscow_time()
-            )
-            db.add(audit_log)
-        ticket.updated_at = get_moscow_time()
+
+        ticket.category_id = category.id
+
+        # Аудит изменения
+        audit_log = AuditLog(
+            actor_id=str(current_user.id),
+            actor_name=current_user.full_name,
+            action_type="change_category",
+            description=f"Изменена категория заявки #{ticket_id} с '{old_category_name}' на '{category.name}'",
+            entity_type="ticket",
+            entity_id=str(ticket_id),
+            is_pdn_related=False,
+            timestamp=datetime.utcnow()
+        )
+        db.add(audit_log)
+
+        # Обновляем время изменения заявки
+        ticket.updated_at = datetime.utcnow()
         db.commit()
 
         return jsonify({
@@ -503,25 +478,30 @@ def change_ticket_priority(ticket_id):
             return jsonify({"success": False, "error": "Некорректный приоритет"}), 400
 
         old_priority = ticket.priority
-        if old_priority != priority:
-            ticket.priority = priority
-            priority_names = {
-                'low': 'Низкий',
-                'normal': 'Средний',
-                'high': 'Высокий'
-            }
-            audit_log = AuditLog(
-                actor_id=str(current_user.id),
-                actor_name=current_user.full_name,
-                action_type="change_priority",
-                description=f"Изменен приоритет заявки #{ticket_id} с '{priority_names.get(old_priority, old_priority)}' на '{priority_names.get(priority, priority)}'",
-                entity_type="ticket",
-                entity_id=str(ticket_id),
-                is_pdn_related=False,
-                timestamp=get_moscow_time()
-            )
-            db.add(audit_log)
-        ticket.updated_at = get_moscow_time()
+        ticket.priority = priority
+
+        # Преобразование приоритета для аудита
+        priority_names = {
+            'low': 'Низкий',
+            'normal': 'Средний',
+            'high': 'Высокий'
+        }
+
+        # Аудит изменения
+        audit_log = AuditLog(
+            actor_id=str(current_user.id),
+            actor_name=current_user.full_name,
+            action_type="change_priority",
+            description=f"Изменен приоритет заявки #{ticket_id} с '{priority_names.get(old_priority, old_priority)}' на '{priority_names.get(priority, priority)}'",
+            entity_type="ticket",
+            entity_id=str(ticket_id),
+            is_pdn_related=False,
+            timestamp=datetime.utcnow()
+        )
+        db.add(audit_log)
+
+        # Обновляем время изменения заявки
+        ticket.updated_at = datetime.utcnow()
         db.commit()
 
         return jsonify({"success": True, "priority": priority})
@@ -580,7 +560,7 @@ def change_ticket_status(ticket_id):
             entity_type="ticket",
             entity_id=str(ticket_id),
             is_pdn_related=False,
-            timestamp=get_moscow_time()
+            timestamp=datetime.utcnow()
         )
         db.add(audit_log)
 
@@ -615,7 +595,7 @@ def change_ticket_status(ticket_id):
                 notify_ticket_update(ticket, notification_text, db, "status_change")
 
         # Обновляем время изменения заявки
-        ticket.updated_at = get_moscow_time()
+        ticket.updated_at = datetime.utcnow()
         db.commit()
 
         return jsonify({"success": True, "status": status})
@@ -1390,25 +1370,8 @@ def assign_ticket(ticket_id):
         return redirect(url_for('tickets'))
     assignee_id = request.form.get('assignee_id')
     if assignee_id:
-        old_assignee_id = ticket.assignee_id
         ticket.assignee_id = int(assignee_id)
         db.commit()
-        # Логирование смены исполнителя
-        if old_assignee_id != ticket.assignee_id:
-            old_name = db.query(User).filter(User.id == old_assignee_id).first().full_name if old_assignee_id else "Не назначен"
-            new_name = db.query(User).filter(User.id == ticket.assignee_id).first().full_name if ticket.assignee_id else "Не назначен"
-            audit_log = AuditLog(
-                actor_id=str(current_user.id),
-                actor_name=current_user.full_name,
-                action_type="change_assignee",
-                description=f"Изменён исполнитель заявки #{ticket_id}: {old_name} → {new_name}",
-                entity_type="ticket",
-                entity_id=str(ticket_id),
-                is_pdn_related=False,
-                timestamp=get_moscow_time()
-            )
-            db.add(audit_log)
-            db.commit()
         flash('Исполнитель назначен', 'success')
     db.close()
     return redirect(url_for('ticket_detail', ticket_id=ticket_id))
@@ -1551,69 +1514,11 @@ def update_ticket_field(ticket_id):
         if field == 'priority':
             if value not in ['low', 'normal', 'high']:
                 return jsonify({'success': False, 'message': 'Неверный приоритет'}), 400
-            old_priority = ticket.priority
             ticket.priority = value
-            if old_priority != ticket.priority:
-                priority_names = {
-                    'low': 'Низкий',
-                    'normal': 'Средний',
-                    'high': 'Высокий'
-                }
-                audit_log = AuditLog(
-                    actor_id=str(current_user.id),
-                    actor_name=current_user.full_name,
-                    action_type="change_priority",
-                    description=f"Изменен приоритет заявки #{ticket_id} с '{priority_names.get(old_priority, old_priority)}' на '{priority_names.get(ticket.priority, ticket.priority)}'",
-                    entity_type="ticket",
-                    entity_id=str(ticket_id),
-                    is_pdn_related=False,
-                    timestamp=get_moscow_time()
-                )
-                db.add(audit_log)
 
         elif field == 'status':
             if value not in ['new', 'in_progress', 'resolved', 'irrelevant', 'closed']:
                 return jsonify({'success': False, 'message': 'Неверный статус'}), 400
-            old_status = ticket.status
-            ticket.status = value
-            if old_status != ticket.status:
-                status_names = {
-                    'new': 'Новая',
-                    'in_progress': 'В работе',
-                    'resolved': 'Решена',
-                    'irrelevant': 'Неактуально',
-                    'closed': 'Закрыта'
-                }
-                audit_log = AuditLog(
-                    actor_id=str(current_user.id),
-                    actor_name=current_user.full_name,
-                    action_type="change_status",
-                    description=f"Изменен статус заявки #{ticket_id} с {status_names.get(old_status, old_status)} на {status_names.get(ticket.status, ticket.status)}",
-                    entity_type="ticket",
-                    entity_id=str(ticket_id),
-                    is_pdn_related=False,
-                    timestamp=get_moscow_time()
-                )
-                db.add(audit_log)
-
-        elif field == 'assignee':
-            if value:
-                user = db.query(User).filter(User.id == value).first()
-                if not user:
-                    return jsonify({'success': False, 'message': 'Пользователь не найден'}), 400
-                old_assignee_id = ticket.assignee_id
-                ticket.assignee_id = value
-                if old_assignee_id != ticket.assignee_id:
-                    audit_log = AuditLog(
-                        actor_id=str(current_user.id),
-                        actor_name=current_user.full_name,
-                        action_type="change_assignee",
-                        description=f"Изменён исполнитель заявки #{ticket_id}: {old_assignee_id} → {value}",
-                        entity_type="ticket",
-                        entity_id=str(ticket_id),
-                        is_pdn_related=False,
-                        timestamp=get_moscow_time()
-                    )
             ticket.status = value
 
         elif field == 'assignee':
@@ -1726,13 +1631,6 @@ def utility_processor():
     return {
         'now': datetime.utcnow
     }
-
-# Константа для московского времени
-MOSCOW_TZ = pytz.timezone('Europe/Moscow')
-
-def get_moscow_time():
-    """Возвращает текущее время в московском часовом поясе"""
-    return datetime.now(MOSCOW_TZ)
 
 if __name__ == '__main__':
     debug_mode = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
