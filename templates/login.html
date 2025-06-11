@@ -1,15 +1,204 @@
 {% extends "base.html" %}
 
-{% block title %}Вход в систему | Helpdesk{% endblock %}
+{% block title %}Вход в систему | ОБУЗ КГКБСМП{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
+
+    .login-page-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: #f8f9fa;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        z-index: 9999;
+    }
+
+    .login-form {
+        width: 100%;
+        max-width: 400px;
+        padding: 30px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .login-logo {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .login-logo h1 {
+        color: #0d6efd;
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+    }
+
+    .login-btn {
+        padding: 12px;
+        font-size: 1.1rem;
+    }
+
+    .login-alert {
+        margin-bottom: 20px;
+        border-radius: 5px;
+        padding: 15px;
+        display: flex;
+        align-items: center;
+        max-width: 400px;
+        width: 100%;
+    }
+
+    .login-alert i {
+        margin-right: 10px;
+        font-size: 1.2rem;
+    }
+
+    .login-alert.alert-danger {
+        background-color: #f8d7da;
+        border: 1px solid #f5c2c7;
+        color: #842029;
+    }
+
+    .login-alert.alert-success {
+        background-color: #d1e7dd;
+        border: 1px solid #badbcc;
+        color: #0f5132;
+    }
+
+    .login-alert.alert-info {
+        background-color: #d1ecf1;
+        border: 1px solid #bee5eb;
+        color: #0c5460;
+    }
+
+    /* Toast overlay подложка */
+    .toast-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 10999;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(3px);
+    }
+
+    .toast-overlay.show {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    /* Улучшенные стили для toast */
+    .toast-container {
+        z-index: 11000 !important;
+    }
+
+    #loginToast {
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        border: none;
+        border-radius: 12px;
+        overflow: hidden;
+        min-width: 350px;
+        transform: translateY(-20px);
+        opacity: 0;
+        transition: all 0.3s ease;
+    }
+
+    #loginToast.show {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    #loginToast .toast-header {
+        border-bottom: none;
+        padding: 15px 20px 10px;
+        background: linear-gradient(135deg, #dc3545, #c82333);
+        color: white;
+        border-radius: 12px 12px 0 0;
+    }
+
+    #loginToast.toast-success .toast-header {
+        background: linear-gradient(135deg, #28a745, #218838);
+    }
+
+    #loginToast.toast-info .toast-header {
+        background: linear-gradient(135deg, #17a2b8, #138496);
+    }
+
+    #loginToast .toast-header .btn-close {
+        filter: invert(1);
+        opacity: 0.8;
+    }
+
+    #loginToast .toast-header .btn-close:hover {
+        opacity: 1;
+    }
+
+    #loginToast .toast-body {
+        padding: 15px 20px;
+        font-size: 1.1rem;
+        background: white;
+        color: #333;
+        border-radius: 0 0 12px 12px;
+    }
+
+    /* Анимация появления */
+    @keyframes slideInDown {
+        from {
+            transform: translateY(-50px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .toast-animate {
+        animation: slideInDown 0.4s ease-out;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="login-container">
+<div class="login-page-container">
     <div class="login-logo">
-        <h1>Helpdesk</h1>
+        <h1>ОБУЗ КГКБСМП</h1>
         <p class="text-muted">Панель администратора</p>
     </div>
 
-    <form method="post" action="{{ url_for('login') }}" class="login-form">
+    <!-- Login alerts outside of base container -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="login-alert alert-{{ category if category != 'message' else 'info' }}">
+                    {% if category == 'error' %}
+                        <i class="fas fa-exclamation-circle"></i>
+                    {% elif category == 'success' %}
+                        <i class="fas fa-check-circle"></i>
+                    {% else %}
+                        <i class="fas fa-info-circle"></i>
+                    {% endif %}
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form method="post" action="{{ url_for('login') }}" class="login-form" id="loginForm">
         <div class="mb-4">
             <label for="username" class="form-label">Имя пользователя</label>
             <div class="input-group">
@@ -27,14 +216,141 @@
         </div>
 
         <div class="d-grid">
-            <button type="submit" class="btn btn-primary login-btn">
+            <button type="submit" class="btn btn-primary login-btn" id="loginBtn">
                 <i class="fas fa-sign-in-alt me-2"></i> Войти
             </button>
         </div>
     </form>
 
     <div class="text-center mt-4">
-        <p class="text-muted">Система обработки заявок</p>
+        <p class="text-muted">Заявочная система</p>
     </div>
 </div>
+
+<!-- Toast overlay подложка -->
+<div id="toastOverlay" class="toast-overlay"></div>
+
+<!-- Toast container для уведомлений -->
+<div class="toast-container position-fixed top-50 start-50 translate-middle">
+    <div id="loginToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong class="me-auto">Ошибка входа</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="toastMessage">
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const loginForm = document.getElementById('loginForm');
+    const loginBtn = document.getElementById('loginBtn');
+    const toastEl = document.getElementById('loginToast');
+    const toastMessage = document.getElementById('toastMessage');
+    const toastOverlay = document.getElementById('toastOverlay');
+
+    // Показываем toast если есть flash сообщения об ошибках
+    const flashAlerts = document.querySelectorAll('.login-alert.alert-danger');
+    if (flashAlerts.length > 0) {
+        const errorMessage = flashAlerts[0].textContent.trim();
+        showToast(errorMessage, 'danger');
+    }
+
+    function showToast(message, type = 'danger') {
+        const toastHeader = toastEl.querySelector('.toast-header');
+        const icon = toastHeader.querySelector('i');
+        const title = toastHeader.querySelector('strong');
+
+        // Сброс классов
+        toastEl.className = 'toast';
+
+        // Обновляем содержимое в зависимости от типа
+        if (type === 'danger') {
+            icon.className = 'fas fa-exclamation-triangle me-2';
+            title.textContent = 'Ошибка входа';
+            toastEl.classList.add('toast-danger');
+        } else if (type === 'success') {
+            icon.className = 'fas fa-check-circle me-2';
+            title.textContent = 'Успешно';
+            toastEl.classList.add('toast-success');
+        } else if (type === 'info') {
+            icon.className = 'fas fa-info-circle me-2';
+            title.textContent = 'Информация';
+            toastEl.classList.add('toast-info');
+        }
+
+        toastMessage.textContent = message;
+
+        // Показываем подложку
+        toastOverlay.classList.add('show');
+
+        // Добавляем анимацию
+        toastEl.classList.add('toast-animate');
+
+        const toast = new bootstrap.Toast(toastEl, {
+            autohide: true,
+            delay: 5000
+        });
+
+        // Обработчики событий для toast
+        toastEl.addEventListener('shown.bs.toast', function() {
+            toastEl.classList.add('show');
+        });
+
+        toastEl.addEventListener('hidden.bs.toast', function() {
+            toastOverlay.classList.remove('show');
+            toastEl.classList.remove('toast-animate', 'show');
+        });
+
+        // Закрытие по клику на подложку
+        toastOverlay.addEventListener('click', function() {
+            toast.hide();
+        });
+
+        toast.show();
+    }
+
+    // Обработка отправки формы
+    loginForm.addEventListener('submit', function(e) {
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value.trim();
+
+        if (!username || !password) {
+            e.preventDefault();
+            showToast('Пожалуйста, заполните все поля', 'danger');
+            return;
+        }
+
+        // Показываем индикатор загрузки
+        loginBtn.disabled = true;
+        loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Вход...';
+
+        // Восстанавливаем кнопку через некоторое время (в случае ошибки)
+        setTimeout(function() {
+            loginBtn.disabled = false;
+            loginBtn.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i> Войти';
+        }, 5000);
+    });
+
+    // Автофокус на поле имени пользователя
+    document.getElementById('username').focus();
+
+    // Обработка Enter в полях
+    document.getElementById('username').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            document.getElementById('password').focus();
+        }
+    });
+
+    document.getElementById('password').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            loginForm.submit();
+        }
+    });
+});
+</script>
 {% endblock %}

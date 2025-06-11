@@ -7,11 +7,21 @@
 <div class="form-container">
     <h4 class="mb-4"><i class="fas fa-user-edit me-2"></i>Редактирование пользователя</h4>
 
-    <form action="{{ url_for('edit_user', user_id=user.id) }}" method="post">
+    <form action="{{ url_for('edit_user', user_id=user.id) }}" method="post" id="editUserForm">
         <div class="row">
             <div class="col-md-6 mb-3">
                 <label for="full_name" class="form-label">ФИО*</label>
                 <input type="text" class="form-control" id="full_name" name="full_name" placeholder="Введите ФИО пользователя" value="{{ user.full_name }}" required>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" name="email" placeholder="Введите email" value="{{ user.email or '' }}">
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label for="phone" class="form-label">Телефон</label>
+                <input type="tel" class="form-control" id="phone" name="phone" placeholder="Введите номер телефона" value="{{ user.phone or '' }}">
             </div>
 
             <div class="col-md-6 mb-3">
@@ -27,7 +37,7 @@
                 <label for="username" class="form-label">Логин для входа*</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="fas fa-user"></i></span>
-                    <input type="text" class="form-control" id="username" name="username" placeholder="Введите логин" value="{{ user.username }}">
+                    <input type="text" class="form-control" id="username" name="username" placeholder="Введите логин" value="{{ user.username }}" required>
                 </div>
             </div>
 
@@ -40,27 +50,56 @@
             </div>
 
             <div class="col-md-4 mb-3">
-                <label for="position" class="form-label">Должность</label>
-                <input type="text" class="form-control" id="position" name="position" placeholder="Укажите должность" value="{{ user.position }}">
+                <label for="position_id" class="form-label">Должность</label>
+                <select class="form-select" id="position_id" name="position_id">
+                    <option value="">Выберите должность</option>
+                    {% for position in positions %}
+                    <option value="{{ position.id }}" {% if user.position_id == position.id %}selected{% endif %}>{{ position.name }}</option>
+                    {% endfor %}
+                </select>
             </div>
 
             <div class="col-md-4 mb-3">
-                <label for="department" class="form-label">Отдел</label>
-                <input type="text" class="form-control" id="department" name="department" placeholder="Укажите отдел" value="{{ user.department }}">
+                <label for="department_id" class="form-label">Отдел</label>
+                <select class="form-select" id="department_id" name="department_id">
+                    <option value="">Выберите отдел</option>
+                    {% for department in departments %}
+                    <option value="{{ department.id }}" {% if user.department_id == department.id %}selected{% endif %}>{{ department.name }}</option>
+                    {% endfor %}
+                </select>
             </div>
 
             <div class="col-md-4 mb-3">
-                <label for="office" class="form-label">Кабинет</label>
-                <input type="text" class="form-control" id="office" name="office" placeholder="Укажите кабинет" value="{{ user.office }}">
+                <label for="office_id" class="form-label">Кабинет</label>
+                <select class="form-select" id="office_id" name="office_id">
+                    <option value="">Выберите кабинет</option>
+                    {% for office in offices %}
+                    <option value="{{ office.id }}" {% if user.office_id == office.id %}selected{% endif %}>{{ office.name }}</option>
+                    {% endfor %}
+                </select>
             </div>
 
-            <div class="col-md-12 mb-3">
-                <label for="chat_id" class="form-label">ID в Telegram</label>
-                <div class="input-group">
-                    <span class="input-group-text"><i class="fab fa-telegram"></i></span>
-                    <input type="text" class="form-control" id="chat_id" name="chat_id" placeholder="Введите ID в Telegram" value="{{ user.chat_id }}">
+            <div class="col-md-4 mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="is_active" name="is_active" {% if user.is_active %}checked{% endif %}>
+                    <label class="form-check-label" for="is_active">
+                        Активен
+                    </label>
                 </div>
-                <small class="text-muted">Изменение этого параметра может нарушить связь с ботом Telegram</small>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="is_archived" name="is_archived" {% if user.is_archived %}checked{% endif %}>
+                    <label class="form-check-label" for="is_archived">
+                        Уволен
+                    </label>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <label for="archived_at" class="form-label">Дата увольнения</label>
+                <input type="date" class="form-control" id="archived_at" name="archived_at" value="{{ user.archived_at|default('', true) }}">
             </div>
 
             <div class="col-md-12 mb-4">
@@ -83,7 +122,7 @@
                                         <span class="badge bg-danger">Заблокирован</span>
                                     {% endif %}
                                 </p>
-                                <p><strong>Дата регистрации:</strong> {{ user.created_at|datetime }}</p>
+                                <p><strong>Дата регистрации:</strong> {{ user.created_at|datetime_msk }}</p>
                             </div>
                         </div>
                     </div>
@@ -101,4 +140,57 @@
         </div>
     </form>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const isArchived = document.getElementById('is_archived');
+        const archivedAt = document.getElementById('archived_at');
+        const form = document.getElementById('editUserForm');
+
+        function checkArchiveByDate() {
+            if (archivedAt.value) {
+                const today = new Date();
+                const dateVal = new Date(archivedAt.value);
+                today.setHours(0,0,0,0);
+                dateVal.setHours(0,0,0,0);
+                if (dateVal <= today) {
+                    isArchived.checked = true;
+                }
+            }
+        }
+
+        function toggleDateRequired() {
+            if (isArchived.checked) {
+                archivedAt.required = true;
+            } else {
+                archivedAt.required = false;
+                archivedAt.value = '';
+            }
+        }
+
+        // При изменении даты увольнения
+        archivedAt.addEventListener('change', function() {
+            checkArchiveByDate();
+            toggleDateRequired();
+        });
+
+        // При изменении чекбокса "Уволен"
+        isArchived.addEventListener('change', function() {
+            toggleDateRequired();
+        });
+
+        // При загрузке страницы
+        checkArchiveByDate();
+        toggleDateRequired();
+
+        // Валидация при отправке формы
+        form.addEventListener('submit', function(e) {
+            if (isArchived.checked && !archivedAt.value) {
+                e.preventDefault();
+                alert('Пожалуйста, укажите дату увольнения!');
+                archivedAt.focus();
+            }
+        });
+    });
+</script>
 {% endblock %}

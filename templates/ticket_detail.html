@@ -19,7 +19,7 @@
             <div class="card-body">
                 <div class="ticket-title">{{ ticket.title }}</div>
                 <div class="text-muted mb-3">
-                    <i class="far fa-calendar-alt me-1"></i> {{ ticket.created_at|datetime }}
+                    <i class="far fa-calendar-alt me-1"></i> {{ ticket.created_at|datetime_msk }}
                 </div>
                 <div class="ticket-description mb-3">
                     {{ ticket.description }}
@@ -106,14 +106,25 @@
                         <i class="fas fa-info-circle me-1"></i> Статус:
                     </div>
                     <div class="detail-value">
-                        <span class="badge status-{{ ticket.status }}">
-                            {% if ticket.status == 'new' %}Новая
-                            {% elif ticket.status == 'in_progress' %}В работе
-                            {% elif ticket.status == 'resolved' %}Решена
-                            {% elif ticket.status == 'irrelevant' %}Неактуально
-                            {% elif ticket.status == 'closed' %}Закрыта
+                        {% if ticket.status == 'open' %}
+                            <select class="form-select form-select-sm editable-field" data-field="status" data-ticket-id="{{ ticket.id }}">
+                                <option value="open" selected>Открыта</option>
+                                <option value="closed">Закрыта</option>
+                                <option value="irrelevant">Неактуальна</option>
+                            </select>
+                        {% else %}
+                            <span class="badge status-{{ ticket.status }}">
+                                {% if ticket.status == 'open' %}Открыта
+                                {% elif ticket.status == 'closed' %}Закрыта
+                                {% elif ticket.status == 'irrelevant' %}Неактуальна
+                                {% endif %}
+                            </span>
+                            {% if ticket.can_be_reopened() %}
+                                <button class="btn btn-sm btn-outline-primary ms-2" id="returnToWork" data-ticket-id="{{ ticket.id }}">
+                                    <i class="fas fa-undo me-1"></i> Вернуть в работу
+                                </button>
                             {% endif %}
-                        </span>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -206,7 +217,7 @@
                         <div class="chat-message {% if message.sender_id|string == current_user.id|string %}outgoing{% else %}incoming{% endif %}">
                             <div class="message-header">
                                 <span class="message-sender">{{ message.sender_name }}</span>
-                                <span class="message-time">{{ message.created_at|datetime }}</span>
+                                <span class="message-time">{{ message.created_at|datetime_msk }}</span>
                                 {% if message.is_pinned %}
                                 <span class="pinned-message-badge">
                                     <i class="fas fa-thumbtack"></i> Закреплено
@@ -270,7 +281,7 @@
                         <div class="chat-message {% if message.sender_id|string == current_user.id|string %}outgoing{% else %}incoming{% endif %}">
                             <div class="message-header">
                                 <span class="message-sender">{{ message.sender_name }}</span>
-                                <span class="message-time">{{ message.created_at|datetime }}</span>
+                                <span class="message-time">{{ message.created_at|datetime_msk }}</span>
                                 {% if message.is_pinned %}
                                 <span class="pinned-message-badge">
                                     <i class="fas fa-thumbtack"></i> Закреплено
@@ -380,6 +391,10 @@
 {% endblock %}
 
 {% block extra_js %}
+<script>
+  window.STATUSES = {{ statuses|tojson }};
+  window.currentUserId = '{{ current_user.id }}';
+</script>
 <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
 <script src="{{ url_for('static', filename='js/ticket_detail.js') }}"></script>
 {% endblock %}

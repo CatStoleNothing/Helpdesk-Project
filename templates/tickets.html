@@ -29,11 +29,9 @@
                                 <label for="status" class="form-label">Статус</label>
                                 <select class="form-select" id="status" name="status">
                                     <option value="all" {% if filter_params.status == 'all' %}selected{% endif %}>Все</option>
-                                    <option value="new" {% if filter_params.status == 'new' %}selected{% endif %}>Новые</option>
-                                    <option value="in_progress" {% if filter_params.status == 'in_progress' %}selected{% endif %}>В работе</option>
-                                    <option value="resolved" {% if filter_params.status == 'resolved' %}selected{% endif %}>Решенные</option>
-                                    <option value="irrelevant" {% if filter_params.status == 'irrelevant' %}selected{% endif %}>Неактуальные</option>
-                                    <option value="closed" {% if filter_params.status == 'closed' %}selected{% endif %}>Закрытые</option>
+                                    {% for status in statuses %}
+                                        <option value="{{ status.id }}" {% if filter_params.status == status.id %}selected{% endif %}>{{ status.name }}</option>
+                                    {% endfor %}
                                 </select>
                             </div>
                             <div class="col-md-4">
@@ -126,21 +124,11 @@
         <i class="fas fa-exchange-alt"></i> Изменить статус
         <span class="submenu-arrow"><i class="fas fa-chevron-right"></i></span>
         <div class="context-submenu status-submenu">
-            <div class="context-menu-item status-new" data-status="new">
-                <span class="badge status-new">Новая</span>
+            {% for status in statuses %}
+            <div class="context-menu-item status-{{ status.id }}" data-status="{{ status.id }}">
+                <span class="badge status-{{ status.id }}">{{ status.name }}</span>
             </div>
-            <div class="context-menu-item status-in_progress" data-status="in_progress">
-                <span class="badge status-in_progress">В работе</span>
-            </div>
-            <div class="context-menu-item status-resolved" data-status="resolved">
-                <span class="badge status-resolved">Решена</span>
-            </div>
-            <div class="context-menu-item status-irrelevant" data-status="irrelevant">
-                <span class="badge status-irrelevant">Неактуально</span>
-            </div>
-            <div class="context-menu-item status-closed" data-status="closed">
-                <span class="badge status-closed">Закрыта</span>
-            </div>
+            {% endfor %}
         </div>
     </div>
 </div>
@@ -474,6 +462,8 @@ document.addEventListener('DOMContentLoaded', function() {
         return originalQuerySelectorAll.call(document, selector);
     };
 });
+
+window.STATUSES = {{ statuses|tojson }};
 </script>
 {% endblock %}
 

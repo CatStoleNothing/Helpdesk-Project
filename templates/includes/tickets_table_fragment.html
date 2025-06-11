@@ -41,22 +41,10 @@
                     </td>
                     <td>
                         <span class="badge status-{{ ticket.status }}">
-                            {% if ticket.status == 'new' %}
-                                Новая
-                            {% elif ticket.status == 'in_progress' %}
-                                В работе
-                            {% elif ticket.status == 'resolved' %}
-                                Решена
-                            {% elif ticket.status == 'irrelevant' %}
-                                Неактуально
-                            {% elif ticket.status == 'closed' %}
-                                Закрыта
-                            {% else %}
-                                {{ ticket.status }}
-                            {% endif %}
+                            {{ statuses_dict[ticket.status] if ticket.status in statuses_dict else ticket.status }}
                         </span>
                     </td>
-                    <td>{{ ticket.created_at|datetime }}</td>
+                    <td>{{ ticket.created_at|datetime_msk }}</td>
                     <td>
                         <a href="{{ url_for('ticket_detail', ticket_id=ticket.id) }}" class="btn btn-sm btn-primary">
                             <i class="fas fa-eye"></i>

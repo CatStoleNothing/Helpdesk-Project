@@ -79,22 +79,10 @@
                                 <i class="fas fa-user me-1"></i> {{ ticket.creator_name }}
                             </span>
                             <span>
-                                <i class="fas fa-clock me-1"></i> {{ ticket.created_at|datetime }}
+                                <i class="fas fa-clock me-1"></i> {{ ticket.created_at|datetime_msk }}
                             </span>
                             <span class="badge {{ ticket.status }}">
-                                {% if ticket.status == 'new' %}
-                                    Новая
-                                {% elif ticket.status == 'in_progress' %}
-                                    В работе
-                                {% elif ticket.status == 'resolved' %}
-                                    Решена
-                                {% elif ticket.status == 'irrelevant' %}
-                                    Неактуально
-                                {% elif ticket.status == 'closed' %}
-                                    Закрыта
-                                {% else %}
-                                    {{ ticket.status }}
-                                {% endif %}
+                                {{ statuses_dict[ticket.status] if ticket.status in statuses_dict else ticket.status }}
                             </span>
                         </div>
                         <div class="ticket-extra-info d-flex flex-wrap gap-2">

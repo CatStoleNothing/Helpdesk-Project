@@ -161,7 +161,7 @@ const TicketChat = (function() {
                 messageElement.className = `chat-message ${data.message.is_internal ? 'outgoing' : 'incoming'}`;
 
                 let sender = data.message.sender_name;
-                if (!data.message.is_internal) {
+                if (data.message.sender_id == window.currentUserId) {
                     sender = "Вы";
                 }
                 let messageHTML = `

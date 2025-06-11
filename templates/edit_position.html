@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Редактировать' if pos else 'Добавить' }} должность | Helpdesk{% endblock %}
+{% block page_title %}{{ 'Редактировать' if pos else 'Добавить' }} должность{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4>
+        <i class="fas fa-user-tie me-2"></i>
+        {{ 'Редактировать должность' if pos else 'Добавить должность' }}
+    </h4>
+    <a href="{{ url_for('dictionaries') }}#positions" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Назад к списку
+    </a>
+</div>
+
+<div class="form-container">
+    <form method="post">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="mb-4">
+                    <label for="name" class="form-label">
+                        <i class="fas fa-tag me-1"></i>Название должности <span class="text-danger">*</span>
+                    </label>
+                    <input type="text"
+                           class="form-control"
+                           id="name"
+                           name="name"
+                           required
+                           value="{{ pos.name if pos else '' }}"
+                           placeholder="Введите название должности">
+                    <div class="form-text">Укажите полное название должности</div>
+                </div>
+            </div>
+            {% if pos %}
+            <div class="col-md-4">
+                <div class="mb-4">
+                    <div class="alert {{ 'alert-success' if pos.is_currently_active else 'alert-danger' }}">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Текущий статус: {{ 'Активна' if pos.is_currently_active else 'Неактивна' }}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-4">
+                    <label for="active_from" class="form-label">
+                        <i class="fas fa-calendar-plus me-1"></i>Дата начала активности
+                    </label>
+                    <input type="date"
+                           class="form-control"
+                           id="active_from"
+                           name="active_from"
+                           value="{{ pos.active_from.strftime('%Y-%m-%d') if pos and pos.active_from else '' }}">
+                    <div class="form-text">С какой даты должность считается активной</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-4">
+                    <label for="active_to" class="form-label">
+                        <i class="fas fa-calendar-minus me-1"></i>Дата окончания активности
+                    </label>
+                    <input type="date"
+                           class="form-control"
+                           id="active_to"
+                           name="active_to"
+                           value="{{ pos.active_to.strftime('%Y-%m-%d') if pos and pos.active_to else '' }}">
+                    <div class="form-text">До какой даты должность активна (необязательно)</div>
+                </div>
+            </div>
+        </div>
+
+        <hr class="my-4">
+
+        <div class="d-flex justify-content-end gap-2">
+            <a href="{{ url_for('dictionaries') }}#positions" class="btn btn-secondary">
+                <i class="fas fa-times me-1"></i>Отмена
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save me-1"></i>
+                {{ 'Сохранить изменения' if pos else 'Создать должность' }}
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+// Улучшение UX - выделение поля при фокусе с Ctrl+A
+document.addEventListener('DOMContentLoaded', function() {
+    const inputs = document.querySelectorAll('input[type="text"], input[type="date"], textarea');
+
+    inputs.forEach(input => {
+        input.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'a') {
+                e.preventDefault();
+                this.select();
+            }
+        });
+
+        input.addEventListener('focus', function() {
+            this.addEventListener('keydown', selectAllHandler);
+        });
+
+        input.addEventListener('blur', function() {
+            this.removeEventListener('keydown', selectAllHandler);
+        });
+    });
+
+    function selectAllHandler(e) {
+        if (e.ctrlKey && e.key === 'a') {
+            e.preventDefault();
+            e.target.select();
+        }
+    }
+});
+</script>
+{% endblock %}

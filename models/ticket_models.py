@@ -1,6 +1,7 @@
-from sqlalchemy import Column, Integer, String, DateTime, Text, ForeignKey, Boolean
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, Integer, String, DateTime, Text, ForeignKey, Boolean, Enum, Table, JSON, func
+from sqlalchemy.orm import relationship, validates
 import datetime
+import enum
 from models.db_init import Base
 from models.user_models import User
 
@@ -24,10 +25,10 @@ class Ticket(Base):
     description = Column(Text, nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), onupdate=lambda: datetime.datetime.now(datetime.timezone.utc))
-    status = Column(String(20), default="new")  # new, in_progress, resolved, closed, irrelevant
+    status = Column(String(20), default="open")  # open, closed, irrelevant
     creator_chat_id = Column(String(50), nullable=False)
     assignee_id = Column(Integer, ForeignKey("users.id"), nullable=True)  # Ссылка на пользователя-исполнителя
-    resolution = Column(Text, nullable=True)  # Текст решения заявки
+    resolution = Column(Text, nullable=True)  # Текст решения заявки или причина закрытия/неактуальности
 
     # Новые поля
     category_id = Column(Integer, ForeignKey("ticket_categories.id"), nullable=True)
@@ -42,6 +43,23 @@ class Ticket(Base):
 
     # Relationship with Message
     messages = relationship("Message", back_populates="ticket", cascade="all, delete-orphan")
+
+    def can_be_commented(self):
+        """Проверяет, можно ли комментировать заявку"""
+        return self.status == "open"
+
+    def can_be_reopened(self):
+        """Проверяет, можно ли вернуть заявку в работу"""
+        return self.status in ["closed", "irrelevant"]
+
+    def get_status_display(self):
+        """Возвращает отображаемое название статуса"""
+        status_names = {
+            'open': 'Открыта',
+            'closed': 'Закрыта',
+            'irrelevant': 'Неактуальна'
+        }
+        return status_names.get(self.status, self.status)
 
 class Attachment(Base):
     __tablename__ = "attachments"
@@ -114,6 +132,30 @@ class DashboardAttachment(Base):
     file_name = Column(String(255), nullable=False)
     file_type = Column(String(50), nullable=True)
     upload_date = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
+    active_from = Column(DateTime, nullable=True)
+    active_to = Column(DateTime, nullable=True)
+    is_active = Column(Boolean, default=True)
 
     # Relationship with DashboardMessage
     message = relationship("DashboardMessage", back_populates="attachments")
+
+    @property
+    def is_currently_active(self):
+        now = datetime.datetime.now()
+        if self.active_to and self.active_to < now:
+            return False
+        if self.active_from and self.active_from > now:
+            return False
+        return True
+
+    def update_active_status(self):
+        """Обновляет статус активности на основе дат"""
+        self.is_active = self.is_currently_active
+
+    @validates('active_from', 'active_to')
+    def validate_dates(self, key, value):
+        """Валидация и обновление статуса при изменении дат"""
+        if value is not None and not isinstance(value, datetime.datetime):
+            value = datetime.datetime.strptime(value, '%Y-%m-%d')
+        self.update_active_status()
+        return value 

@@ -73,14 +73,10 @@ def create_curator(chat_id=None, password=None):
             return False
 
         # Создаем куратора
-
         curator = User(
             username="SNA",
             password_hash=User.get_password_hash(password),
             full_name="",
-            position="",
-            department="",
-            office="",
             role="curator",  # Роль куратора
             is_confirmed=True,
             is_active=True,

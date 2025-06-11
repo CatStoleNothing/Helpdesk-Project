@@ -45,20 +45,15 @@
                         <i class="fas fa-user-check"></i> Контроль учетных записей
                     </a>
                 </li>
-                <li class="{% if 'categories' in request.path %}active{% endif %}">
-                    <a href="{{ url_for('categories_page') }}">
-                        <i class="fas fa-tags"></i> Категории
+                <li class="{% if 'dictionaries' in request.path %}active{% endif %}">
+                    <a href="{{ url_for('dictionaries') }}">
+                        <i class="fas fa-book"></i> Словари
                     </a>
                 </li>
                 {% elif current_user.role == 'admin' %}
                 <li class="{% if request.path == url_for('registration_approval') %}active{% endif %}">
                     <a href="{{ url_for('registration_approval') }}">
                         <i class="fas fa-user-check"></i> Контроль учетных записей
-                    </a>
-                </li>
-                <li class="{% if 'categories' in request.path %}active{% endif %}">
-                    <a href="{{ url_for('categories_page') }}">
-                        <i class="fas fa-tags"></i> Категории
                     </a>
                 </li>
                 {% endif %}

@@ -1,0 +1,13 @@
+function getStatusName(statusId) {
+    if (window.STATUSES) {
+        const found = window.STATUSES.find(s => s.id === statusId);
+        return found ? found.name : statusId;
+    }
+    return statusId;
+}
+
+function changeTicketStatus(status) {
+    // ... существующий код ...
+    statusCell.innerHTML = `<span class="badge status-${status}">${getStatusName(status)}</span>`;
+    // ... существующий код ...
+} 

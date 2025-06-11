@@ -138,4 +138,14 @@ $(document).ready(function() {
     $('#statusChangeModal').on('hidden.bs.modal', function() {
         $('#statusChangeReason').val('');
     });
+
+    function getStatusName(statusId) {
+        if (window.STATUSES) {
+            const found = window.STATUSES.find(s => s.id === statusId);
+            return found ? found.name : statusId;
+        }
+        return statusId;
+    }
+
+    // Обработчик изменения статуса заявки
 });

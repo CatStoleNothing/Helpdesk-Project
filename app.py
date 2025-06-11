@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, abort, send_from_directory, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, abort, send_from_directory, jsonify, session
 from dotenv import load_dotenv
 import os
 import functools
@@ -8,7 +8,12 @@ import threading
 import logging
 import nest_asyncio
 from sqlalchemy.orm import joinedload
-import hashlib  # Add hashlib for message deduplication
+import hashlib
+import json
+import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import timedelta
+from pytz import timezone, utc
 
 from models.db_init import init_db, SessionLocal
 from models.user_models import User
@@ -16,9 +21,11 @@ from models.ticket_models import (
     Ticket, Attachment, Message, DashboardMessage,
     DashboardAttachment, TicketCategory, AuditLog
 )
+from models.department_models import Department
+from models.position_models import Position
+from models.office_models import Office
 from sqlalchemy import func, desc
 from werkzeug.utils import secure_filename
-from datetime import datetime, timedelta
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 import uuid
 
@@ -27,6 +34,15 @@ from bot.bot import sync_send_notification
 
 # Load environment variables
 load_dotenv()
+
+def admin_required(f):
+    @functools.wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or current_user.role != 'admin':
+            flash('У вас нет прав для доступа к этой странице', 'danger')
+            return redirect(url_for('index'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -55,7 +71,7 @@ login_manager.login_view = 'login'
 @login_manager.user_loader
 def load_user(user_id):
     db = SessionLocal()
-    user = db.query(User).get(int(user_id))
+    user = db.get(User, int(user_id))
     db.close()
     return user
 
@@ -117,6 +133,43 @@ def run_async_in_thread(coro, *args, **kwargs):
     finally:
         loop.close()
 
+def log_user_action(user_id, action_type, description):
+    """
+    Логирует действие пользователя в системе.
+    
+    Args:
+        user_id: ID пользователя, выполнившего действие
+        action_type: Тип действия
+        description: Описание действия
+    """
+    db = SessionLocal()
+    try:
+        user = db.get(User, user_id)
+        if not user:
+            logging.error(f"Не удалось найти пользователя с ID {user_id}")
+            return False
+            
+        audit_log = AuditLog(
+            actor_id=str(user_id),
+            actor_name=user.full_name,
+            action_type=action_type,
+            description=description,
+            entity_type='user',
+            entity_id=str(user_id),
+            is_pdn_related=True,
+            timestamp=datetime.datetime.utcnow()
+        )
+        
+        db.add(audit_log)
+        db.commit()
+        return True
+    except Exception as e:
+        logging.error(f"Ошибка при логировании действия пользователя: {str(e)}")
+        db.rollback()
+        return False
+    finally:
+        db.close()
+
 # Добавляем фильтр nl2br для Jinja
 @app.template_filter('nl2br')
 def nl2br(value):
@@ -177,18 +230,32 @@ def notify_ticket_update(ticket, message, db, notification_type="update"):
         logging.error(f"Ошибка при отправке уведомления пользователю {ticket.creator_chat_id}: {str(e)}")
         return False
 
+# Вместо load_json_list('statuses.json') используем справочник статусов:
+STATUSES = [
+    {"id": "new", "name": "Новая"},
+    {"id": "in_progress", "name": "В работе"},
+    {"id": "resolved", "name": "Решена"},
+    {"id": "irrelevant", "name": "Неактуально"},
+    {"id": "closed", "name": "Закрыта"},
+]
+
 @app.route('/create_ticket', methods=['GET', 'POST'])
 @login_required_role()
 def create_ticket():
     ticket_db = SessionLocal()
     import sqlalchemy
-    # Определим, админ/куратор ли это
     is_staff = getattr(current_user, 'role', None) in ["admin", "curator"]
     users = None
     if is_staff:
         user_db = SessionLocal()
-        users = user_db.query(User).filter(User.is_active == True, User.is_confirmed == True).all()
+        users = user_db.query(User).options(
+            sqlalchemy.orm.joinedload(User.position),
+            sqlalchemy.orm.joinedload(User.department)
+        ).filter(User.is_active == True, User.is_confirmed == True).all()
         user_db.close()
+
+    # Категории теперь только из БД
+    categories = ticket_db.query(TicketCategory).filter(TicketCategory.is_active == True).all()
 
     if request.method == 'POST':
         title = request.form.get('title', '').strip()
@@ -196,7 +263,7 @@ def create_ticket():
         category_id = request.form.get('category_id')
         # добавляем приоритет, если есть
         priority = request.form.get('priority', 'normal')
-        status = request.form.get('status', 'new')
+        status = request.form.get('status', 'open')
         # Новое: выбор или автоматический текущий creator
         if is_staff and request.form.get('creator_id'):
             creator_chat_id = request.form.get('creator_id')
@@ -209,14 +276,13 @@ def create_ticket():
             priority=priority,
             status=status,
             creator_chat_id=creator_chat_id,
-            created_at=datetime.utcnow()
+            created_at=datetime.datetime.utcnow()
         )
         ticket_db.add(new_ticket)
         ticket_db.commit()
         ticket_db.close()
         flash('Заявка успешно создана', 'success')
         return redirect(url_for('tickets'))
-    categories = ticket_db.query(TicketCategory).all()
     ticket_db.close()
     return render_template(
         'create_ticket.html',
@@ -225,151 +291,185 @@ def create_ticket():
     )
 
 @app.route('/registration_approval', methods=['GET', 'POST'])
-@login_required_role(role=['curator', 'admin'])
+@login_required
 def registration_approval():
+    if not current_user.is_curator:
+        flash('У вас нет прав для доступа к этой странице', 'danger')
+        return redirect(url_for('index'))
+    
     db = SessionLocal()
-    ticket_db = SessionLocal()  # Добавляем сессию базы данных для аудита
-    action = request.args.get('action')
-    user_id = request.args.get('id', type=int)
-
-    if request.method == 'POST':
-        action = request.form.get('action')
-        user_id = request.form.get('user_id', type=int)
-        if user_id and action:
-            user = db.query(User).filter(User.id == user_id).first()
-            if not user:
-                flash('Пользователь не найден', 'error')
-                db.close()
-                ticket_db.close()  # Закрываем сессию базы данных для аудита
+    try:
+        if request.method == 'POST':
+            user_id = request.form.get('user_id')
+            action = request.form.get('action')
+            
+            if not user_id or not action:
+                flash('Неверные параметры запроса', 'danger')
                 return redirect(url_for('registration_approval'))
-            # История логирования
-            audit_action = ''
+            
+            user = db.get(User, user_id)
+            if not user:
+                flash('Пользователь не найден', 'danger')
+                return redirect(url_for('registration_approval'))
+            
             if action == 'approve':
                 user.is_confirmed = True
-                user.is_active = True
-                audit_action = 'approve_registration'
-                flash(f'Пользователь {user.full_name} подтвержден', 'success')
+                user.approved_by_id = current_user.id
+                user.approved_at = datetime.utcnow()
+                
+                # Логируем действие
+                log_user_action(
+                    user_id=current_user.id,
+                    action_type='approve_registration',
+                    description=f'Подтверждена регистрация пользователя {user.full_name}'
+                )
+                
+                flash('Регистрация успешно подтверждена', 'success')
+                
             elif action == 'reject':
+                rejection_reason = request.form.get('rejection_reason')
+                if not rejection_reason:
+                    flash('Необходимо указать причину отклонения', 'danger')
+                    return redirect(url_for('registration_approval'))
+                
                 user.is_confirmed = False
-                user.is_active = False
-                audit_action = 'reject_registration'
-                flash(f'Пользователь {user.full_name} отклонён и заблокирован', 'info')
-            elif action == 'unlock':
-                user.is_active = True
-                audit_action = 'unlock_user'
-                flash(f'Пользователь {user.full_name} разблокирован', 'success')
-            elif action == 'reconsider':
-                user.is_confirmed = False
-                user.is_active = True
-                audit_action = 'reconsider_registration'
-                flash(f'Заявка {user.full_name} возвращена на рассмотрение', 'info')
-
-            # Используем ticket_db для AuditLog, не db
-            ticket_db.add(AuditLog(
-                actor_id=str(current_user.id),
-                actor_name=current_user.full_name,
-                action_type=audit_action,
-                description=f"{audit_action} для пользователя {user.full_name} (id={user_id})",
-                entity_type='user',
-                entity_id=str(user_id),
-                is_pdn_related=True,
-                timestamp=datetime.utcnow()
-            ))
+                user.rejected_by_id = current_user.id
+                user.rejected_at = datetime.utcnow()
+                user.rejection_reason = rejection_reason
+                
+                # Логируем действие
+                log_user_action(
+                    user_id=current_user.id,
+                    action_type='reject_registration',
+                    description=f'Отклонена регистрация пользователя {user.full_name}. Причина: {rejection_reason}'
+                )
+                
+                flash('Регистрация отклонена', 'success')
+            
             db.commit()
-            ticket_db.commit()  # Фиксируем изменения в ticket_db
-            db.close()
-            ticket_db.close()  # Закрываем сессию базы данных для аудита
             return redirect(url_for('registration_approval'))
-
-    # Фильтруем пользователей: только заявки, отклонённые и блокированные; подтверждённых и активных пропускаем
-    new_users = db.query(User).filter(User.is_confirmed == False, User.is_active == True).all()
-    rejected_users = db.query(User).filter(User.is_active == False).all()
-    approved_users = db.query(User).filter(User.is_confirmed == True, User.is_active == True).all()
-
-<<<<<<< Updated upstream
-    # --- Фильтрация истории действий ---
-    actor_id = request.args.get('actor_id', '').strip()
-    action_type = request.args.get('action_type', '').strip()
-    date_from = request.args.get('date_from', '').strip()
-    date_to = request.args.get('date_to', '').strip()
-    filter_user_id = request.args.get('user_id', type=int)
-    if filter_user_id is None:
-        filter_user_id = request.args.get('target_id', type=int)
-
-    actions_query = ticket_db.query(AuditLog).filter(AuditLog.entity_type.in_(['user', 'ticket']))
-    if actor_id:
-        actions_query = actions_query.filter(AuditLog.actor_id == actor_id)
-    if action_type:
-        actions_query = actions_query.filter(AuditLog.action_type == action_type)
-    if filter_user_id:
-        actions_query = actions_query.filter(
-            AuditLog.entity_id == str(filter_user_id),
-            AuditLog.entity_type == 'user'
-        )
-    if date_from:
-        from_dt = datetime.strptime(date_from, '%Y-%m-%d')
-        actions_query = actions_query.filter(AuditLog.timestamp >= from_dt)
-    if date_to:
-        to_dt = datetime.strptime(date_to, '%Y-%m-%d')
-        to_dt = to_dt.replace(hour=23, minute=59, second=59)
-        actions_query = actions_query.filter(AuditLog.timestamp <= to_dt)
-    actions = actions_query.order_by(AuditLog.timestamp.desc()).limit(200).all()
-
-    # Для фильтров: список пользователей и действий
-    all_actors = ticket_db.query(AuditLog.actor_id, AuditLog.actor_name).distinct().all()
-    all_action_types = [row[0] for row in ticket_db.query(AuditLog.action_type).distinct().all()]
-
-    db.close()
-    ticket_db.close()  # Закрываем сессию базы данных для аудита
-    return render_template('registration_approval.html',
-        new_users=new_users,
-        rejected_users=rejected_users,
-        approved_users=approved_users,
-        actions=actions,
-        all_actors=all_actors,
-        all_action_types=all_action_types,
-        filter_params={
-            'actor_id': actor_id,
-            'action_type': action_type,
-            'date_from': date_from,
-            'date_to': date_to,
-            'user_id': filter_user_id
-        }
-    )
-=======
-    # История одобрения/отклонения - используем ticket_db для AuditLog
-    actions = ticket_db.query(AuditLog).filter(AuditLog.entity_type=='user').order_by(AuditLog.timestamp.desc()).limit(50).all()
-
-    db.close()
-    ticket_db.close()  # Закрываем сессию базы данных для аудита
-    return render_template('registration_approval.html', new_users=new_users, rejected_users=rejected_users, approved_users=approved_users, actions=actions)
->>>>>>> Stashed changes
+        
+        # Получаем списки пользователей
+        pending_users = db.query(User).filter_by(is_confirmed=None).all()
+        approved_users = db.query(User).filter_by(is_confirmed=True).all()
+        rejected_users = db.query(User).filter_by(is_confirmed=False).all()
+        
+        return render_template('registration_approval.html',
+                             pending_users=pending_users,
+                             approved_users=approved_users,
+                             rejected_users=rejected_users)
+    finally:
+        db.close()
 
 @app.route('/edit_user/<int:user_id>', methods=['GET', 'POST'])
-@login_required_role(['curator'])
+@login_required_role(['admin', 'curator'])
 def edit_user(user_id):
     db = SessionLocal()
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
+    try:
+        user = db.get(User, user_id)
+        if not user:
+            db.close()
+            abort(404)
+        
+        if request.method == 'POST':
+            # Сохраняем старые значения для логирования изменений
+            old_values = {
+                'full_name': user.full_name,
+                'position_id': user.position_id,
+                'office_id': user.office_id,
+                'phone': user.phone,
+                'email': user.email,
+                'is_active': user.is_active,
+                'is_archived': user.is_archived,
+                'archived_at': user.archived_at
+            }
+            
+            # Обновляем данные пользователя
+            user.full_name = request.form.get('full_name')
+            user.position_id = request.form.get('position_id', type=int)
+            user.office_id = request.form.get('office_id', type=int)
+            user.phone = request.form.get('phone')
+            user.email = request.form.get('email')
+            # Получаем значения чекбоксов и даты
+            is_archived = bool(request.form.get('is_archived'))
+            archived_at_str = request.form.get('archived_at')
+            archived_at = None
+            if archived_at_str:
+                try:
+                    archived_at = datetime.datetime.strptime(archived_at_str, '%Y-%m-%d').date()
+                except Exception:
+                    archived_at = None
+            
+            # Логика увольнения и активности
+            if is_archived:
+                if not archived_at:
+                    flash('Пожалуйста, укажите дату увольнения!', 'danger')
+                    return redirect(url_for('edit_user', user_id=user_id))
+                if archived_at <= datetime.date.today():
+                    user.is_archived = True
+                    user.is_active = False
+                    user.archived_at = archived_at
+                else:
+                    user.is_archived = False
+                    user.is_active = True
+                    user.archived_at = archived_at
+            else:
+                user.is_archived = False
+                user.archived_at = None
+                user.is_active = bool(request.form.get('is_active'))
+            
+            # Остальные поля
+            # user.is_active уже обработан выше
+            
+            # Формируем описание изменений для лога
+            changes = []
+            if old_values['full_name'] != user.full_name:
+                changes.append(f"ФИО: {old_values['full_name']} → {user.full_name}")
+            if old_values['position_id'] != user.position_id:
+                old_position = db.get(Position, old_values['position_id'])
+                new_position = db.get(Position, user.position_id)
+                changes.append(f"Должность: {old_position.name if old_position else 'Не указана'} → {new_position.name if new_position else 'Не указана'}")
+            if old_values['office_id'] != user.office_id:
+                old_office = db.get(Office, old_values['office_id'])
+                new_office = db.get(Office, user.office_id)
+                changes.append(f"Кабинет: {old_office.name if old_office else 'Не указан'} → {new_office.name if new_office else 'Не указан'}")
+            if old_values['phone'] != user.phone:
+                changes.append(f"Телефон: {old_values['phone'] or 'Не указан'} → {user.phone or 'Не указан'}")
+            if old_values['email'] != user.email:
+                changes.append(f"Email: {old_values['email'] or 'Не указан'} → {user.email or 'Не указан'}")
+            if old_values['is_active'] != user.is_active:
+                changes.append(f"Статус: {'Активен' if old_values['is_active'] else 'Неактивен'} → {'Активен' if user.is_active else 'Неактивен'}")
+            if old_values['is_archived'] != user.is_archived:
+                changes.append(f"Уволен: {'Да' if old_values['is_archived'] else 'Нет'} → {'Да' if user.is_archived else 'Нет'}")
+            if old_values['archived_at'] != user.archived_at:
+                changes.append(f"Дата увольнения: {old_values['archived_at'] or 'Не указана'} → {user.archived_at or 'Не указана'}")
+            
+            try:
+                db.commit()
+                
+                # Логируем изменения, если они были
+                if changes:
+                    log_user_action(
+                        user_id=current_user.id,
+                        action_type='edit_user',
+                        description=f"Изменены данные пользователя {user.full_name}: {', '.join(changes)}"
+                    )
+                
+                flash('Данные пользователя успешно обновлены', 'success')
+                return redirect(url_for('users'))
+            except Exception as e:
+                db.rollback()
+                flash(f'Ошибка при обновлении данных: {str(e)}', 'danger')
+                return redirect(url_for('edit_user', user_id=user_id))
+        
+        positions = db.query(Position).all()
+        offices = db.query(Office).all()
+        return render_template('edit_user.html',
+                             user=user,
+                             positions=positions,
+                             offices=offices)
+    finally:
         db.close()
-        abort(404)
-    if request.method == 'POST':
-        user.full_name = request.form.get('full_name', user.full_name).strip()
-        user.username  = request.form.get('username',  user.username).strip()
-        user.position  = request.form.get('position',  user.position).strip()
-        user.department= request.form.get('department',user.department).strip()
-        user.office    = request.form.get('office',    user.office).strip()
-        user.role      = request.form.get('role',      user.role)
-        user.chat_id   = request.form.get('chat_id',   user.chat_id).strip()
-        pwd = request.form.get('password','').strip()
-        if pwd:
-            user.password_hash = User.get_password_hash(pwd)
-        db.commit()
-        db.close()
-        flash('Пользователь обновлён', 'success')
-        return redirect(url_for('users'))
-    db.close()
-    return render_template('edit_user.html', user=user)
 
 @app.route('/edit_category/<int:category_id>', methods=['GET', 'POST'])
 @login_required_role(['curator'])
@@ -386,17 +486,9 @@ def edit_category(category_id):
         db.commit()
         db.close()
         flash('Категория обновлена', 'success')
-        return redirect(url_for('categories_page'))
+        return redirect(url_for('dictionaries'))
     db.close()
     return render_template('edit_category.html', category=category)
-
-@app.route('/categories')
-@login_required_role()
-def categories_page():
-    ticket_db = SessionLocal()
-    categories = ticket_db.query(TicketCategory).all()
-    ticket_db.close()
-    return render_template('categories.html', categories=categories)
 
 @app.route('/categories', methods=['GET'])
 @login_required_role()
@@ -442,12 +534,12 @@ def change_ticket_category(ticket_id):
             entity_type="ticket",
             entity_id=str(ticket_id),
             is_pdn_related=False,
-            timestamp=datetime.utcnow()
+            timestamp=datetime.datetime.utcnow()
         )
         db.add(audit_log)
 
         # Обновляем время изменения заявки
-        ticket.updated_at = datetime.utcnow()
+        ticket.updated_at = datetime.datetime.utcnow()
         db.commit()
 
         return jsonify({
@@ -496,12 +588,12 @@ def change_ticket_priority(ticket_id):
             entity_type="ticket",
             entity_id=str(ticket_id),
             is_pdn_related=False,
-            timestamp=datetime.utcnow()
+            timestamp=datetime.datetime.utcnow()
         )
         db.add(audit_log)
 
         # Обновляем время изменения заявки
-        ticket.updated_at = datetime.utcnow()
+        ticket.updated_at = datetime.datetime.utcnow()
         db.commit()
 
         return jsonify({"success": True, "priority": priority})
@@ -518,92 +610,41 @@ def change_ticket_priority(ticket_id):
 @login_required_role()
 def change_ticket_status(ticket_id):
     db = SessionLocal()
-
     try:
-        ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
-        if not ticket:
-            return jsonify({"success": False, "error": "Заявка не найдена"}), 404
-
-        status = request.form.get('status')
-        reason = request.form.get('reason', '')
-
-        valid_statuses = ['new', 'in_progress', 'resolved', 'irrelevant', 'closed']
-        if not status or status not in valid_statuses:
-            return jsonify({"success": False, "error": "Некорректный статус"}), 400
-
+        ticket = Ticket.query.get_or_404(ticket_id)
+        new_status = request.form.get('status')
+        
+        if not new_status:
+            flash('Не указан новый статус', 'danger')
+            return redirect(url_for('ticket_detail', ticket_id=ticket_id))
+        
+        # Сохраняем старый статус для логирования
         old_status = ticket.status
-        ticket.status = status
-
-        # Если заявка завершена или отмечена как неактуальная, сохраняем причину
-        if status in ['resolved', 'irrelevant'] and reason:
-            ticket.resolution = reason
-
-        # Если заявка возвращена в работу, сбрасываем решение
-        if status in ['new', 'in_progress'] and old_status in ['resolved', 'irrelevant']:
-            ticket.resolution = None
-
-        # Преобразование статуса для аудита
-        status_names = {
-            'new': 'Новая',
-            'in_progress': 'В работе',
-            'resolved': 'Решена',
-            'irrelevant': 'Неактуально',
-            'closed': 'Закрыта'
-        }
-
-        # Аудит изменения
-        audit_log = AuditLog(
-            actor_id=str(current_user.id),
-            actor_name=current_user.full_name,
-            action_type="change_status",
-            description=f"Изменен статус заявки #{ticket_id} с '{status_names.get(old_status, old_status)}' на '{status_names.get(status, status)}'",
-            entity_type="ticket",
-            entity_id=str(ticket_id),
-            is_pdn_related=False,
-            timestamp=datetime.utcnow()
-        )
-        db.add(audit_log)
-
-        # Если добавили причину, добавляем сообщение в чат
-        if reason:
-            new_message = Message(
-                ticket_id=ticket_id,
-                sender_id=str(current_user.id),
-                sender_name=current_user.full_name,
-                content=f"Статус изменен на '{status_names.get(status, status)}'\nПричина: {reason}",
-                is_internal=True  # Внутреннее сообщение, видно только администраторам
+        
+        # Обновляем статус
+        ticket.status = new_status
+        ticket.updated_at = datetime.datetime.utcnow()
+        
+        try:
+            db.commit()
+            
+            # Логируем изменение статуса
+            log_user_action(
+                user_id=current_user.id,
+                action_type='change_status',
+                description=f"Изменен статус заявки #{ticket.id} ({ticket.title}): {old_status} → {new_status}"
             )
-            db.add(new_message)
-
-            # Также добавляем сообщение для пользователя, если статус меняется на resolved или irrelevant
-            if status in ['resolved', 'irrelevant']:
-                user_message = Message(
-                    ticket_id=ticket_id,
-                    sender_id=str(current_user.id),
-                    sender_name=current_user.full_name,
-                    content=f"Статус заявки изменен на '{status_names.get(status, status)}'\nКомментарий: {reason}",
-                    is_internal=False  # Внешнее сообщение, видно пользователю
-                )
-                db.add(user_message)
-
-                # Отправляем уведомление в Telegram
-                notification_text = f"🔔 <b>Изменен статус заявки #{ticket_id}</b>\n\n"
-                notification_text += f"Заявка: <b>{ticket.title}</b>\n"
-                notification_text += f"Статус: <b>{status_names.get(status, status)}</b>\n"
-                notification_text += f"Комментарий: {reason}\n"
-
-                notify_ticket_update(ticket, notification_text, db, "status_change")
-
-        # Обновляем время изменения заявки
-        ticket.updated_at = datetime.utcnow()
-        db.commit()
-
-        return jsonify({"success": True, "status": status})
-
-    except Exception as e:
-        db.rollback()
-        return jsonify({"success": False, "error": str(e)}), 500
-
+            
+            # Отправляем уведомление
+            message = f"Статус вашей заявки #{ticket.id} изменен на: {new_status}"
+            notify_ticket_update(ticket, message, db, "status_change")
+            
+            flash('Статус заявки успешно обновлен', 'success')
+        except Exception as e:
+            db.rollback()
+            flash(f'Ошибка при обновлении статуса: {str(e)}', 'danger')
+        
+        return redirect(url_for('ticket_detail', ticket_id=ticket_id))
     finally:
         db.close()
 
@@ -618,19 +659,28 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        user_db = SessionLocal()
-        user = user_db.query(User).filter(func.lower(User.username) == username.lower()).first()
-        if user and user.verify_password(password):
-            if not user.is_confirmed:
-                user_db.close()
-                flash('Ваша учетная запись ожидает подтверждения администратором', 'error')
-                return render_template('login.html')
-            login_user(user)
-            user_db.close()
-            next_page = request.args.get('next', url_for('dashboard'))
-            return redirect(next_page)
-        user_db.close()
-        flash('Неверное имя пользователя или пароль', 'error')
+        
+        if not username or not password:
+            flash('Пожалуйста, введите имя пользователя и пароль', 'error')
+            return redirect(url_for('login'))
+        
+        db = SessionLocal()
+        try:
+            user = db.query(User).filter(User.username == username).first()
+            
+            if user and user.verify_password(password):
+                if hasattr(user, 'is_fired') and user.is_fired:
+                    flash('Ваша учетная запись деактивирована. Обратитесь к администратору.', 'error')
+                    return redirect(url_for('login'))
+                login_user(user)
+                flash('Вы успешно вошли в систему', 'success')
+                return redirect(url_for('dashboard'))
+            else:
+                flash('Неверное имя пользователя или пароль', 'error')
+                return redirect(url_for('login'))
+        finally:
+            db.close()
+    
     return render_template('login.html')
 
 @app.route('/logout')
@@ -644,6 +694,8 @@ def logout():
 def dashboard():
     ticket_db = SessionLocal()
     user_db = SessionLocal()
+    statuses = STATUSES
+    statuses_dict = {s['id']: s['name'] for s in statuses}
 
     user = user_db.query(User).filter(User.id == current_user.id).first()
 
@@ -655,19 +707,19 @@ def dashboard():
         return redirect(url_for('login'))
 
     total_tickets = ticket_db.query(func.count(Ticket.id)).scalar()
-    new_tickets = ticket_db.query(func.count(Ticket.id)).filter(Ticket.status == 'new').scalar()
+    new_tickets = ticket_db.query(func.count(Ticket.id)).filter(Ticket.status == 'open').scalar()
     resolved_tickets = ticket_db.query(func.count(Ticket.id)).filter(Ticket.status == 'resolved').scalar()
 
     assigned_tickets = ticket_db.query(func.count(Ticket.id)).filter(Ticket.assignee_id == current_user.id).scalar()
 
-    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+    thirty_days_ago = datetime.datetime.utcnow() - datetime.timedelta(days=30)
     resolved_this_month = ticket_db.query(func.count(Ticket.id)).filter(
         Ticket.assignee_id == current_user.id,
         Ticket.status == 'resolved',
         Ticket.updated_at >= thirty_days_ago
     ).scalar()
 
-    twelve_hours_ago = datetime.utcnow() - timedelta(hours=12)
+    twelve_hours_ago = datetime.datetime.utcnow() - datetime.timedelta(hours=12)
     recent_tickets = ticket_db.query(Ticket).filter(
         Ticket.created_at >= twelve_hours_ago
     ).order_by(desc(Ticket.created_at)).all()
@@ -712,7 +764,9 @@ def dashboard():
                           dashboard_messages=dashboard_messages,
                           pinned_message=pinned_message,
                           staff=staff,
-                          current_user_id=current_user.id)
+                          current_user_id=current_user.id,
+                          statuses=statuses,
+                          statuses_dict=statuses_dict)
 
 @app.route('/send_dashboard_message', methods=['POST'])
 @login_required_role()
@@ -745,7 +799,7 @@ def send_dashboard_message():
                     os.makedirs(attachments_dir)
 
                 filename = secure_filename(image_file.filename)
-                filename = f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{filename}"
+                filename = f"{datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{filename}"
 
                 file_path = os.path.join(attachments_dir, filename)
                 image_file.save(file_path)
@@ -772,7 +826,7 @@ def send_dashboard_message():
             entity_type="dashboard_message",
             entity_id=str(new_message.id),
             is_pdn_related=False,
-            timestamp=datetime.utcnow()
+            timestamp=datetime.datetime.utcnow()
         )
 
         ticket_db.add(audit_log)
@@ -819,7 +873,7 @@ def pin_dashboard_message(message_id):
                 entity_type="dashboard_message",
                 entity_id=str(message_id),
                 is_pdn_related=False,
-                timestamp=datetime.utcnow()
+                timestamp=datetime.datetime.utcnow()
             )
 
             ticket_db.add(audit_log)
@@ -855,7 +909,7 @@ def unpin_dashboard_message(message_id):
                 entity_type="dashboard_message",
                 entity_id=str(message_id),
                 is_pdn_related=False,
-                timestamp=datetime.utcnow()
+                timestamp=datetime.datetime.utcnow()
             )
 
             ticket_db.add(audit_log)
@@ -907,7 +961,7 @@ def delete_dashboard_message(message_id):
             entity_type="dashboard_message",
             entity_id=str(message_info['id']),
             is_pdn_related=False,
-            timestamp=datetime.utcnow()
+            timestamp=datetime.datetime.utcnow()
         )
 
         ticket_db.add(audit_log)
@@ -939,106 +993,104 @@ def create_category():
         db.commit()
         flash(f'Категория "{name}" создана', 'success')
         db.close()
-        return redirect(url_for('categories_page'))
+        return redirect(url_for('dictionaries'))
     db.close()
     return render_template('create_category.html')
 
-# Обновляем обработчик для отправки сообщений в чат, чтобы отправлять сообщения и в Telegram
 @app.route('/send_chat_message', methods=['POST'])
 @login_required_role()
 def send_chat_message():
-    ticket_db = SessionLocal()
+    db = SessionLocal()
     try:
         ticket_id = request.form.get('ticket_id')
+        message_text = request.form.get('message')
         is_internal = request.form.get('is_internal') == 'true'
-        message_text = request.form.get('message', '').strip()
-        has_attachment = 'image' in request.files and request.files['image'].filename != ''
-        ticket = ticket_db.query(Ticket).get(ticket_id)
 
-        # 1. Создаём сообщение
+        if not ticket_id or not message_text:
+            return jsonify({"success": False, "error": "Необходимо указать ID заявки и текст сообщения"}), 400
+
+        ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
+        if not ticket:
+            return jsonify({"success": False, "error": "Заявка не найдена"}), 404
+
+        # Проверяем возможность комментирования
+        if not ticket.can_be_commented():
+            return jsonify({
+                "success": False, 
+                "error": f"Заявка находится в статусе '{ticket.get_status_display()}'. Комментирование недоступно."
+            }), 403
+
+        # Создаем новое сообщение
         new_message = Message(
             ticket_id=ticket_id,
-            sender_id=current_user.id,
+            sender_id=str(current_user.id),
             sender_name=current_user.full_name,
             content=message_text,
             is_internal=is_internal
         )
-        ticket_db.add(new_message)
-        ticket_db.flush()  # Получаем ID сообщения
+        db.add(new_message)
 
-        attachment_data = None
-        file_save_path_abs = None
-        if has_attachment:
-            image_file = request.files['image']
-            allowed_extensions = {'jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'ods', 'odt', 'csv', 'odp'}
-            ext = image_file.filename.rsplit('.', 1)[1].lower()
-            if ext in allowed_extensions:
-                filename_secure = secure_filename(image_file.filename)
-                timestamp_str = datetime.utcnow().strftime('%Y%m%d%H%M%S')
-                final_filename = f"{timestamp_str}_{filename_secure}"
-                relative_path_for_db = f"tickets/{ticket_id}/{final_filename}"
-                attachments_dir_abs = os.path.join(app.config['UPLOAD_FOLDER'], 'tickets', str(ticket_id))
-                os.makedirs(attachments_dir_abs, exist_ok=True)
-                file_save_path_abs = os.path.join(attachments_dir_abs, final_filename)
-                image_file.save(file_save_path_abs)
+        # Обрабатываем вложения
+        if 'attachments[]' in request.files:
+            files = request.files.getlist('attachments[]')
+            for file in files:
+                if file.filename:
+                    filename = secure_filename(file.filename)
+                    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                    file.save(file_path)
 
-                new_attachment = Attachment(
-                    message_id=new_message.id,
-                    ticket_id=ticket_id,
-                    file_path=relative_path_for_db,
-                    file_name=image_file.filename,
-                    file_type=image_file.content_type if hasattr(image_file, 'content_type') else None,
-                    is_image=(image_file.content_type.startswith('image/') if image_file.content_type else False)
-                )
-                ticket_db.add(new_attachment)
-                ticket_db.flush()
-                attachment_data = {
-                    'id': new_attachment.id,
-                    'file_name': new_attachment.file_name,
-                    'file_path': f"/ticket_attachment/{new_attachment.file_path}",
-                    'is_image': new_attachment.is_image
-                }
-            else:
-                ticket_db.rollback()
-                allowed_ext_str = ', '.join(allowed_extensions)
-                return jsonify({'success': False, 'error': f'Недопустимый формат файла. Допустимые форматы: {allowed_ext_str}'}), 400
+                    # Определяем тип файла
+                    file_type = file.content_type
+                    is_image = file_type.startswith('image/')
 
-        ticket_db.commit()
+                    # Создаем запись о вложении
+                    attachment = Attachment(
+                        ticket_id=ticket_id,
+                        file_path=file_path,
+                        file_name=filename,
+                        file_type=file_type,
+                        is_image=is_image,
+                        message_id=new_message.id
+                    )
+                    db.add(attachment)
 
-        # 2. Отправляем в Telegram (только если это не внутреннее сообщение)
-        if ticket and not is_internal:
-            from bot.bot import sync_send_photo, sync_send_document, sync_send_notification
-            if has_attachment and attachment_data and attachment_data['is_image']:
-                sync_send_photo(ticket.creator_chat_id, file_save_path_abs, caption=message_text)
-            elif has_attachment and attachment_data:
-                sync_send_document(ticket.creator_chat_id, file_save_path_abs, caption=message_text, original_filename=attachment_data['file_name'])
-            elif message_text:
-                sync_send_notification(ticket.creator_chat_id, message_text)
+        # Обновляем время последнего обновления заявки
+        ticket.updated_at = datetime.datetime.utcnow()
+        db.commit()
 
-        # 3. Возвращаем результат для фронта
+        # Отправляем уведомление в Telegram
+        notification_text = f"💬 <b>Новое сообщение в заявке #{ticket_id}</b>\n\n"
+        notification_text += f"От: <b>{current_user.full_name}</b>\n"
+        notification_text += f"Заявка: <b>{ticket.title}</b>\n"
+        notification_text += f"Сообщение: {message_text}"
+
+        notify_ticket_update(ticket, notification_text, db, "new_message")
+
         return jsonify({
-            'success': True,
-            'message': {
-                'id': new_message.id,
-                'content': new_message.content,
-                'sender_name': new_message.sender_name,
-                'created_at': new_message.created_at.strftime('%d.%m.%Y %H:%M'),
-                'is_internal': is_internal,
-                'attachment': attachment_data
+            "success": True,
+            "message": {
+                "id": new_message.id,
+                "content": new_message.content,
+                "sender_name": new_message.sender_name,
+                "is_internal": new_message.is_internal,
+                "created_at": new_message.created_at.strftime('%d.%m.%Y %H:%M')
             }
         })
+
     except Exception as e:
-        ticket_db.rollback()
-        return jsonify({'success': False, 'error': str(e)}), 500
+        db.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+
     finally:
-        ticket_db.close()
+        db.close()
 
 @app.route('/tickets')
 @login_required_role()
 def tickets():
     ticket_db = SessionLocal()
     user_db = SessionLocal()
-
+    statuses = STATUSES
+    statuses_dict = {s['id']: s['name'] for s in statuses}
     status = request.args.get('status', 'all')
     title = request.args.get('title', '')
     description = request.args.get('description', '')
@@ -1072,11 +1124,11 @@ def tickets():
             query = query.filter(Ticket.assignee_id == assignee)
 
     if date_from:
-        date_from_obj = datetime.strptime(date_from, '%Y-%m-%d')
+        date_from_obj = datetime.datetime.strptime(date_from, '%Y-%m-%d')
         query = query.filter(Ticket.created_at >= date_from_obj)
 
     if date_to:
-        date_to_obj = datetime.strptime(date_to, '%Y-%m-%d')
+        date_to_obj = datetime.datetime.strptime(date_to, '%Y-%m-%d')
         date_to_obj = date_to_obj.replace(hour=23, minute=59, second=59)
         query = query.filter(Ticket.created_at <= date_to_obj)
 
@@ -1133,14 +1185,17 @@ def tickets():
                           page=page,
                           total_pages=total_pages,
                           has_prev=(page > 1),
-                          has_next=(page < total_pages))
+                          has_next=(page < total_pages),
+                          statuses=statuses,
+                          statuses_dict=statuses_dict)
 
 @app.route('/tickets/fragment', methods=['POST'])
 @login_required_role()
 def tickets_fragment():
     ticket_db = SessionLocal()
     user_db = SessionLocal()
-
+    statuses = STATUSES
+    statuses_dict = {s['id']: s['name'] for s in statuses}
     status = request.form.get('status', 'all')
     title = request.form.get('title', '')
     description = request.form.get('description', '')
@@ -1174,11 +1229,11 @@ def tickets_fragment():
             query = query.filter(Ticket.assignee_id == assignee)
 
     if date_from:
-        date_from_obj = datetime.strptime(date_from, '%Y-%m-%d')
+        date_from_obj = datetime.datetime.strptime(date_from, '%Y-%m-%d')
         query = query.filter(Ticket.created_at >= date_from_obj)
 
     if date_to:
-        date_to_obj = datetime.strptime(date_to, '%Y-%m-%d')
+        date_to_obj = datetime.datetime.strptime(date_to, '%Y-%m-%d')
         date_to_obj = date_to_obj.replace(hour=23, minute=59, second=59)
         query = query.filter(Ticket.created_at <= date_to_obj)
 
@@ -1223,101 +1278,187 @@ def tickets_fragment():
                           page=page,
                           total_pages=total_pages,
                           has_prev=(page > 1),
-                          has_next=(page < total_pages))
+                          has_next=(page < total_pages),
+                          statuses=statuses,
+                          statuses_dict=statuses_dict)
 
-@app.route('/users')
-@login_required_role(role=['curator'])
+@app.route('/users', methods=['GET', 'POST'])
+@login_required
 def users():
-    user_db = SessionLocal()
-    all_users = user_db.query(User).order_by(User.created_at.desc()).all()
-    user_db.close()
-    return render_template('users.html', users=all_users)
+    if current_user.role not in ['admin', 'curator']:
+        flash('У вас нет доступа к этой странице', 'error')
+        return redirect(url_for('index'))
+    
+    db = SessionLocal()
+    ticket_db = SessionLocal()
+    try:
+        if request.method == 'POST':
+            user_id = request.form.get('user_id', type=int)
+            action = request.form.get('action')
+            
+            if user_id and action:
+                user = db.get(User, user_id)
+                if not user:
+                    flash('Пользователь не найден', 'error')
+                    return redirect(url_for('users'))
+                
+                if action == 'activate':
+                    user.is_active = True
+                    flash(f'Пользователь {user.full_name} активирован', 'success')
+                    audit_action = 'activate_user'
+                elif action == 'deactivate':
+                    user.is_active = False
+                    flash(f'Пользователь {user.full_name} деактивирован', 'info')
+                    audit_action = 'deactivate_user'
+                
+                # Добавляем запись в лог
+                ticket_db.add(AuditLog(
+                    actor_id=str(current_user.id),
+                    actor_name=current_user.full_name,
+                    action_type=audit_action,
+                    description=f"{audit_action} для пользователя {user.full_name} (id={user_id})",
+                    entity_type='user',
+                    entity_id=str(user_id),
+                    is_pdn_related=True,
+                    timestamp=datetime.datetime.utcnow()
+                ))
+                
+                db.commit()
+                ticket_db.commit()
+                return redirect(url_for('users'))
+        
+        # Получаем всех пользователей
+        users = db.query(User).all()
+        
+        # Загружаем связанные объекты для каждого пользователя
+        for user in users:
+            if user.position_id:
+                _ = user.position
+            if user.office_id:
+                _ = user.office
+        
+        # Получаем историю действий
+        actor_id = request.args.get('actor_id', '').strip()
+        action_type = request.args.get('action_type', '').strip()
+        date_from = request.args.get('date_from', '').strip()
+        date_to = request.args.get('date_to', '').strip()
+        
+        actions_query = ticket_db.query(AuditLog).filter(AuditLog.entity_type == 'user')
+        if actor_id:
+            actions_query = actions_query.filter(AuditLog.actor_id == actor_id)
+        if action_type:
+            actions_query = actions_query.filter(AuditLog.action_type == action_type)
+        if date_from:
+            from_dt = datetime.datetime.strptime(date_from, '%Y-%m-%d')
+            actions_query = actions_query.filter(AuditLog.timestamp >= from_dt)
+        if date_to:
+            to_dt = datetime.datetime.strptime(date_to, '%Y-%m-%d')
+            to_dt = to_dt.replace(hour=23, minute=59, second=59)
+            actions_query = actions_query.filter(AuditLog.timestamp <= to_dt)
+        
+        actions = actions_query.order_by(AuditLog.timestamp.desc()).limit(200).all()
+        
+        # Для фильтров
+        all_actors = ticket_db.query(AuditLog.actor_id, AuditLog.actor_name).distinct().all()
+        all_action_types = [row[0] for row in ticket_db.query(AuditLog.action_type).distinct().all()]
+        
+        # Словари для отображения действий
+        action_type_labels = {
+            'approve_registration': 'Подтверждение регистрации',
+            'reject_registration': 'Отклонение регистрации',
+            'activate_user': 'Активация пользователя',
+            'deactivate_user': 'Деактивация пользователя'
+        }
+        
+        action_type_colors = {
+            'approve_registration': 'success',
+            'reject_registration': 'danger',
+            'activate_user': 'success',
+            'deactivate_user': 'warning'
+        }
+        
+        return render_template('users.html',
+                             users=users,
+                             actions=actions,
+                             all_actors=all_actors,
+                             all_action_types=all_action_types,
+                             action_type_labels=action_type_labels,
+                             action_type_colors=action_type_colors,
+                             filter_params={
+                                 'actor_id': actor_id,
+                                 'action_type': action_type,
+                                 'date_from': date_from,
+                                 'date_to': date_to
+                             })
+    finally:
+        db.close()
+        ticket_db.close()
 
 @app.route('/create_user', methods=['GET', 'POST'])
-@login_required_role(role=['curator'])
+@login_required_role(['curator'])
 def create_user():
-    if request.method == 'POST':
-        user_db = SessionLocal()
-        ticket_db = SessionLocal()
+    db = SessionLocal()
+    try:
+        # Получаем данные для выпадающих списков
+        departments = db.query(Department).all()
+        positions = db.query(Position).all()
+        offices = db.query(Office).all()
 
-        try:
-            full_name = request.form['full_name']
-            role = request.form['role']
-            position = request.form.get('position', '')
-            department = request.form.get('department', '')
-            office = request.form.get('office', '')
-            username = request.form.get('username', '')
-            password = request.form.get('password', '')
-            chat_id = request.form.get('chat_id', '')
-
-            if not full_name:
-                flash('Необходимо указать ФИО пользователя', 'error')
-                user_db.close()
-                ticket_db.close()
-                return render_template('create_user.html')
-
-            if username and user_db.query(User).filter(User.username == username).first():
-                user_db.close()
-                ticket_db.close()
-                flash('Пользователь с таким именем уже существует', 'error')
-                return render_template('create_user.html')
-
-            if chat_id and user_db.query(User).filter(User.chat_id == chat_id).first():
-                user_db.close()
-                ticket_db.close()
-                flash('Пользователь с таким Chat ID уже существует', 'error')
-                return render_template('create_user.html')
-
+        if request.method == 'POST':
+            username = request.form.get('username', '').strip()
+            full_name = request.form.get('full_name', '').strip()
+            email = request.form.get('email', '').strip()
+            phone = request.form.get('phone', '').strip()
+            chat_id = request.form.get('chat_id')
+            position_id = request.form.get('position_id')
+            department_id = request.form.get('department_id')
+            office_id = request.form.get('office_id')
+            password = request.form.get('password', '').strip()
+            
+            # Проверяем, не существует ли уже пользователь с таким логином
+            existing_user = db.query(User).filter(User.username == username).first()
+            if existing_user:
+                flash('Пользователь с таким логином уже существует', 'error')
+                return redirect(url_for('create_user'))
+            
+            # Создаем нового пользователя с ролью 'user'
             new_user = User(
                 username=username,
-                password_hash=User.get_password_hash(password) if password else None,
                 full_name=full_name,
-                position=position,
-                department=department,
-                office=office,
-                role=role,
+                email=email if email else None,
+                phone=phone if phone else None,
+                chat_id=chat_id if chat_id else None,
+                position_id=position_id if position_id else None,
+                department_id=department_id if department_id else None,
+                office_id=office_id if office_id else None,
+                role='user',  # Всегда создаем с ролью 'user'
                 is_active=True,
-                is_confirmed=True,
-                chat_id=chat_id if chat_id else f"manual_{datetime.utcnow().timestamp()}"
+                is_confirmed=True
             )
-
-            user_db.add(new_user)
-            user_db.commit()
-
-            audit_log = AuditLog(
-                actor_id=str(current_user.id),
-                actor_name=current_user.full_name,
-                action_type="create_user",
-                description=f"Создан новый пользователь: {new_user.full_name} (ID: {new_user.id}) с ролью {new_user.role}",
-                entity_type="user",
-                entity_id=str(new_user.id),
-                is_pdn_related=True,
-                timestamp=datetime.utcnow()
-            )
-
-            ticket_db.add(audit_log)
-            ticket_db.commit()
-
-            user_db.close()
-            ticket_db.close()
-
-            flash(f'Пользователь {full_name} успешно создан', 'success')
+            new_user.set_password(password)
+            
+            db.add(new_user)
+            db.commit()
+            
+            flash('Пользователь успешно создан', 'success')
             return redirect(url_for('users'))
-
-        except Exception as e:
-            user_db.rollback()
-            ticket_db.rollback()
-            user_db.close()
-            ticket_db.close()
-            flash(f'Ошибка при создании пользователя: {str(e)}', 'error')
-            return render_template('create_user.html')
-
-    return render_template('create_user.html')
+    except Exception as e:
+        db.rollback()
+        flash(f'Ошибка при создании пользователя: {str(e)}', 'error')
+    finally:
+        db.close()
+        
+    return render_template('create_user.html', 
+                         departments=departments,
+                         positions=positions,
+                         offices=offices)
 
 @app.route('/ticket/<int:ticket_id>')
 @login_required_role()
 def ticket_detail(ticket_id):
     db = SessionLocal()
+    statuses = STATUSES
+    statuses_dict = {s['id']: s['name'] for s in statuses}
     ticket = db.query(Ticket)\
         .options(
             joinedload(Ticket.attachments),
@@ -1355,7 +1496,9 @@ def ticket_detail(ticket_id):
                              categories=categories,
                              external_messages=external_messages,
                              internal_messages=internal_messages,
-                             ticket_attachments=ticket_attachments)
+                             ticket_attachments=ticket_attachments,
+                             statuses=statuses,
+                             statuses_dict=statuses_dict)
     db.close()
     return response
 
@@ -1517,7 +1660,7 @@ def update_ticket_field(ticket_id):
             ticket.priority = value
 
         elif field == 'status':
-            if value not in ['new', 'in_progress', 'resolved', 'irrelevant', 'closed']:
+            if value not in ['open', 'closed', 'irrelevant']:
                 return jsonify({'success': False, 'message': 'Неверный статус'}), 400
             ticket.status = value
 
@@ -1533,7 +1676,7 @@ def update_ticket_field(ticket_id):
         else:
             return jsonify({'success': False, 'message': 'Неизвестное поле'}), 400
 
-        ticket.updated_at = datetime.utcnow()
+        ticket.updated_at = datetime.datetime.utcnow()
         db.commit()
 
         # Логируем изменение
@@ -1561,67 +1704,68 @@ def update_ticket_field(ticket_id):
 def change_ticket_status_api(ticket_id):
     db = SessionLocal()
     try:
-        ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
-        if not ticket:
-            return jsonify({'success': False, 'message': 'Заявка не найдена'}), 404
-
+        ticket = Ticket.query.get_or_404(ticket_id)
         data = request.get_json()
-        new_status = data.get('status')
+        
+        if not data or 'status' not in data:
+            return jsonify({"success": False, "error": "Не указан новый статус"}), 400
+        
+        new_status = data['status']
         reason = data.get('reason', '')
-
-        if new_status not in ['new', 'in_progress', 'resolved', 'irrelevant', 'closed']:
-            return jsonify({'success': False, 'message': 'Неверный статус'}), 400
-
+        
+        # Сохраняем старый статус для логирования
         old_status = ticket.status
+        
+        # Обновляем статус
         ticket.status = new_status
-        ticket.updated_at = datetime.utcnow()
-
-        # Если возвращаем в работу
-        if new_status == 'in_progress' and old_status in ['resolved', 'irrelevant']:
-            ticket.resolution = None
-
-        db.commit()
-
-        # Добавляем системное сообщение о смене статуса
-        status_names = {
-            'new': 'Новая',
-            'in_progress': 'В работе',
-            'resolved': 'Решена',
-            'irrelevant': 'Неактуально',
-            'closed': 'Закрыта'
-        }
-
-        message_content = f"Статус заявки изменен с '{status_names.get(old_status, old_status)}' на '{status_names.get(new_status, new_status)}'"
-        if reason:
-            message_content += f"\nПричина: {reason}"
-
-        system_message = Message(
-            ticket_id=ticket_id,
-            sender_id='system',
-            sender_name='Система',
-            content=message_content,
-            is_from_user=False,
-            is_internal=True
-        )
-        db.add(system_message)
-
-        # Логируем изменение
-        log_entry = AuditLog(
-            actor_id=current_user.chat_id,
-            actor_name=current_user.full_name,
-            action_type='status_change',
-            description=f'Изменен статус заявки #{ticket_id} с {old_status} на {new_status}',
-            entity_type='ticket',
-            entity_id=str(ticket_id)
-        )
-        db.add(log_entry)
-        db.commit()
-
-        return jsonify({'success': True, 'message': 'Статус обновлен'})
-
-    except Exception as e:
-        db.rollback()
-        return jsonify({'success': False, 'message': str(e)}), 500
+        ticket.resolution = reason if new_status in ['closed', 'irrelevant'] else None
+        ticket.updated_at = datetime.datetime.utcnow()
+        
+        try:
+            # Если добавили причину, добавляем сообщение в чат
+            if reason:
+                # Внутреннее сообщение для администраторов
+                new_message = Message(
+                    ticket_id=ticket_id,
+                    sender_id=str(current_user.id),
+                    sender_name=current_user.full_name,
+                    content=f"Статус изменен на '{new_status}'\nПричина: {reason}",
+                    is_internal=True
+                )
+                db.add(new_message)
+                
+                # Внешнее сообщение для пользователя
+                user_message = Message(
+                    ticket_id=ticket_id,
+                    sender_id=str(current_user.id),
+                    sender_name=current_user.full_name,
+                    content=f"Статус заявки изменен на '{new_status}'\nКомментарий: {reason}",
+                    is_internal=False
+                )
+                db.add(user_message)
+            
+            db.commit()
+            
+            # Логируем изменение статуса
+            log_user_action(
+                user_id=current_user.id,
+                action_type='change_status',
+                description=f"Изменен статус заявки #{ticket.id} ({ticket.title}): {old_status} → {new_status}" + (f"\nПричина: {reason}" if reason else "")
+            )
+            
+            # Отправляем уведомление
+            notification_text = f"🔔 <b>Изменен статус заявки #{ticket_id}</b>\n\n"
+            notification_text += f"Заявка: <b>{ticket.title}</b>\n"
+            notification_text += f"Статус: <b>{new_status}</b>\n"
+            if reason:
+                notification_text += f"Комментарий: {reason}\n"
+            
+            notify_ticket_update(ticket, notification_text, db, "status_change")
+            
+            return jsonify({"success": True, "status": new_status})
+        except Exception as e:
+            db.rollback()
+            return jsonify({"success": False, "error": str(e)}), 500
     finally:
         db.close()
 
@@ -1629,8 +1773,317 @@ def change_ticket_status_api(ticket_id):
 @app.context_processor
 def utility_processor():
     return {
-        'now': datetime.utcnow
+        'now': datetime.datetime.utcnow
     }
+
+@app.route('/dictionaries')
+@login_required_role()
+def dictionaries():
+    db = SessionLocal()
+    try:
+        # --- Фильтрация отделений ---
+        dep_search = request.args.get('dep_search', '').strip()
+        dep_query = db.query(Department)
+        if dep_search:
+            dep_query = dep_query.filter(Department.name.ilike(f'%{dep_search}%'))
+        departments = dep_query.all()
+
+        # --- Фильтрация кабинетов ---
+        office_search = request.args.get('office_search', '').strip()
+        office_dep_filter = request.args.get('office_dep_filter', '').strip()
+        office_query = db.query(Office)
+        if office_search:
+            office_query = office_query.filter(Office.name.ilike(f'%{office_search}%'))
+        if office_dep_filter:
+            office_query = office_query.filter(Office.department_id == int(office_dep_filter))
+        offices = office_query.all()
+        
+        # Загружаем связанные объекты для всех кабинетов
+        for office in offices:
+            if office.department_id:
+                office.department = db.query(Department).get(office.department_id)
+        
+        all_departments = db.query(Department).all()
+
+        # --- Фильтрация должностей ---
+        pos_search = request.args.get('pos_search', '').strip()
+        pos_query = db.query(Position)
+        if pos_search:
+            pos_query = pos_query.filter(Position.name.ilike(f'%{pos_search}%'))
+        positions = pos_query.all()
+
+        # --- Фильтрация категорий ---
+        cat_search = request.args.get('cat_search', '').strip()
+        cat_query = db.query(TicketCategory)
+        if cat_search:
+            cat_query = cat_query.filter(TicketCategory.name.ilike(f'%{cat_search}%'))
+        categories = cat_query.all()
+
+        return render_template('dictionaries.html',
+                             departments=departments,
+                             offices=offices,
+                             positions=positions,
+                             categories=categories,
+                             all_departments=all_departments)
+    finally:
+        db.close()
+
+@app.route('/add_department', methods=['GET', 'POST'])
+@login_required_role()
+def add_department():
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        
+        # Преобразуем строковые даты в объекты datetime
+        active_from = request.form.get('active_from')
+        active_to = request.form.get('active_to')
+        
+        if active_from:
+            active_from = datetime.datetime.strptime(active_from, '%Y-%m-%d')
+        else:
+            active_from = None
+            
+        if active_to:
+            active_to = datetime.datetime.strptime(active_to, '%Y-%m-%d')
+        else:
+            active_to = None
+            
+        db = SessionLocal()
+        dep = Department(name=name, active_from=active_from, active_to=active_to)
+        dep.update_active_status()  # Обновляем статус активности
+        db.add(dep)
+        db.commit()
+        db.close()
+        flash('Отделение добавлено', 'success')
+        return redirect(url_for('dictionaries'))
+    return render_template('edit_department.html', dep=None)
+
+@app.route('/edit_department/<int:dep_id>', methods=['GET', 'POST'])
+@login_required_role()
+def edit_department(dep_id):
+    db = SessionLocal()
+    dep = db.query(Department).get(dep_id)
+    if not dep:
+        db.close()
+        abort(404)
+    if request.method == 'POST':
+        dep.name = request.form.get('name', '').strip()
+        
+        # Преобразуем строковые даты в объекты datetime
+        active_from = request.form.get('active_from')
+        active_to = request.form.get('active_to')
+        
+        if active_from:
+            dep.active_from = datetime.datetime.strptime(active_from, '%Y-%m-%d')
+        else:
+            dep.active_from = None
+            
+        if active_to:
+            dep.active_to = datetime.datetime.strptime(active_to, '%Y-%m-%d')
+        else:
+            dep.active_to = None
+            
+        dep.update_active_status()  # Обновляем статус активности
+        db.commit()
+        db.close()
+        flash('Отделение обновлено', 'success')
+        return redirect(url_for('dictionaries'))
+    db.close()
+    return render_template('edit_department.html', dep=dep)
+
+@app.route('/delete_department/<int:dep_id>')
+@login_required_role()
+def delete_department(dep_id):
+    db = SessionLocal()
+    dep = db.query(Department).get(dep_id)
+    if dep:
+        db.delete(dep)
+        db.commit()
+        flash('Отделение удалено', 'success')
+    db.close()
+    return redirect(url_for('dictionaries'))
+
+@app.route('/add_office', methods=['GET', 'POST'])
+@login_required_role()
+def add_office():
+    db = SessionLocal()
+    departments = db.query(Department).all()
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        department_id = request.form.get('department_id')
+        
+        # Преобразуем строковые даты в объекты datetime
+        active_from = request.form.get('active_from')
+        active_to = request.form.get('active_to')
+        
+        if active_from:
+            active_from = datetime.datetime.strptime(active_from, '%Y-%m-%d')
+        else:
+            active_from = None
+            
+        if active_to:
+            active_to = datetime.datetime.strptime(active_to, '%Y-%m-%d')
+        else:
+            active_to = None
+            
+        office = Office(
+            name=name,
+            department_id=department_id if department_id else None,
+            active_from=active_from,
+            active_to=active_to
+        )
+        office.update_active_status()  # Обновляем статус активности
+        db.add(office)
+        db.commit()
+        db.close()
+        flash('Кабинет добавлен', 'success')
+        return redirect(url_for('dictionaries'))
+    db.close()
+    return render_template('edit_office.html', office=None, departments=departments)
+
+@app.route('/edit_office/<int:office_id>', methods=['GET', 'POST'])
+@login_required_role()
+def edit_office(office_id):
+    db = SessionLocal()
+    office = db.query(Office).get(office_id)
+    if not office:
+        db.close()
+        abort(404)
+    departments = db.query(Department).all()
+    if request.method == 'POST':
+        office.name = request.form.get('name', '').strip()
+        office.department_id = request.form.get('department_id')
+        
+        # Преобразуем строковые даты в объекты datetime
+        active_from = request.form.get('active_from')
+        active_to = request.form.get('active_to')
+        
+        if active_from:
+            office.active_from = datetime.datetime.strptime(active_from, '%Y-%m-%d')
+        else:
+            office.active_from = None
+            
+        if active_to:
+            office.active_to = datetime.datetime.strptime(active_to, '%Y-%m-%d')
+        else:
+            office.active_to = None
+            
+        office.update_active_status()  # Обновляем статус активности
+        db.commit()
+        db.close()
+        flash('Кабинет обновлен', 'success')
+        return redirect(url_for('dictionaries'))
+    db.close()
+    return render_template('edit_office.html', office=office, departments=departments)
+
+@app.route('/delete_office/<int:office_id>')
+@login_required_role()
+def delete_office(office_id):
+    db = SessionLocal()
+    office = db.query(Office).get(office_id)
+    if office:
+        db.delete(office)
+        db.commit()
+        flash('Кабинет удалён', 'success')
+    db.close()
+    return redirect(url_for('dictionaries'))
+
+@app.route('/add_position', methods=['GET', 'POST'])
+@login_required_role()
+def add_position():
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        
+        # Преобразуем строковые даты в объекты datetime
+        active_from = request.form.get('active_from')
+        active_to = request.form.get('active_to')
+        
+        if active_from:
+            active_from = datetime.datetime.strptime(active_from, '%Y-%m-%d')
+        else:
+            active_from = None
+            
+        if active_to:
+            active_to = datetime.datetime.strptime(active_to, '%Y-%m-%d')
+        else:
+            active_to = None
+            
+        db = SessionLocal()
+        pos = Position(name=name, active_from=active_from, active_to=active_to)
+        pos.update_active_status()  # Обновляем статус активности
+        db.add(pos)
+        db.commit()
+        db.close()
+        flash('Должность добавлена', 'success')
+        return redirect(url_for('dictionaries'))
+    return render_template('edit_position.html', pos=None)
+
+@app.route('/edit_position/<int:pos_id>', methods=['GET', 'POST'])
+@login_required_role()
+def edit_position(pos_id):
+    db = SessionLocal()
+    pos = db.query(Position).get(pos_id)
+    if not pos:
+        db.close()
+        abort(404)
+    if request.method == 'POST':
+        pos.name = request.form.get('name', '').strip()
+        
+        # Преобразуем строковые даты в объекты datetime
+        active_from = request.form.get('active_from')
+        active_to = request.form.get('active_to')
+        
+        if active_from:
+            pos.active_from = datetime.datetime.strptime(active_from, '%Y-%m-%d')
+        else:
+            pos.active_from = None
+            
+        if active_to:
+            pos.active_to = datetime.datetime.strptime(active_to, '%Y-%m-%d')
+        else:
+            pos.active_to = None
+            
+        pos.update_active_status()  # Обновляем статус активности
+        db.commit()
+        db.close()
+        flash('Должность обновлена', 'success')
+        return redirect(url_for('dictionaries'))
+    db.close()
+    return render_template('edit_position.html', pos=pos)
+
+@app.route('/delete_position/<int:pos_id>')
+@login_required_role()
+def delete_position(pos_id):
+    db = SessionLocal()
+    pos = db.query(Position).get(pos_id)
+    if pos:
+        db.delete(pos)
+        db.commit()
+        flash('Должность удалена', 'success')
+    db.close()
+    return redirect(url_for('dictionaries'))
+
+@app.route('/delete_category/<int:category_id>')
+@login_required_role(['curator'])
+def delete_category(category_id):
+    db = SessionLocal()
+    category = db.query(TicketCategory).get(category_id)
+    if category:
+        db.delete(category)
+        db.commit()
+        flash('Категория удалена', 'success')
+    db.close()
+    return redirect(url_for('dictionaries'))
+
+@app.template_filter('datetime_msk')
+def format_datetime_msk(value, fmt='%d.%m.%Y %H:%M'):
+    if value is None:
+        return ''
+    # Если value — naive datetime, делаем его aware в UTC
+    if value.tzinfo is None:
+        value = utc.localize(value)
+    msk = timezone('Europe/Moscow')
+    return value.astimezone(msk).strftime(fmt)
 
 if __name__ == '__main__':
     debug_mode = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")

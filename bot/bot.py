@@ -15,10 +15,12 @@ from typing import List, Optional
 import sys
 import datetime
 import asyncio
-from aiogram.exceptions import TelegramAPIError
+from aiogram.exceptions import TelegramAPIError, TelegramForbiddenError
 import requests
 from dotenv import load_dotenv
 from models.db_init import SessionLocal
+import json
+from pytz import timezone, utc
 
 # Add parent directory to path to import the models
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -266,65 +268,15 @@ def sync_send_document(chat_id, document_path, caption=None, original_filename=N
 
 # Функция для отправки уведомлений пользователю
 async def send_notification(chat_id, message):
+    """Отправляет уведомление пользователю"""
     try:
-        # Проверка валидности chat_id
-        if not chat_id:
-            logging.error(f"Невозможно отправить сообщение: chat_id отсутствует")
-            return False
-
-        # Проверка на manual_ в chat_id (для вручную созданных пользователей)
-        if isinstance(chat_id, str) and chat_id.startswith('manual_'):
-            logging.warning(f"Попытка отправки сообщения вручную созданному пользователю: {chat_id}")
-            return False
-
-        # Преобразование chat_id в строку, если это число
-        chat_id_str = str(chat_id).strip()
-
-        # Детальное логирование для отладки
-        logging.info(f"Отправка сообщения пользователю {chat_id_str}: {message[:50]}...")
-
-        try:
-            # Отправка сообщения через бота напрямую без timeout
-            await bot.send_message(chat_id=chat_id_str, text=message)
-            logging.info(f"Сообщение успешно отправлено пользователю {chat_id_str}")
-            return True
-        except TelegramAPIError as api_error:
-            # Обработка ошибок API Telegram
-            logging.warning(f"Ошибка API Telegram: {str(api_error)}. Пробуем без HTML...")
-            clean_message = re.sub(r'<[^>]*>', '', message)
-            await bot.send_message(chat_id=chat_id_str, text=clean_message)
-            logging.info(f"Сообщение успешно отправлено пользователю {chat_id_str} (без HTML)")
-            return True
-        except Exception as msg_error:
-            # Если первая попытка не удалась, попробуем отправить без форматирования
-            logging.warning(f"Ошибка при отправке сообщения: {str(msg_error)}. Пробуем без парсинга HTML...")
-
-            # Удаляем все HTML-теги из сообщения
-            clean_message = re.sub(r'<[^>]*>', '', message)
-            try:
-                await bot.send_message(chat_id=chat_id_str, text=clean_message)
-                logging.info(f"Сообщение успешно отправлено пользователю {chat_id_str} (без HTML)")
-                return True
-            except Exception as e:
-                logging.error(f"Не удалось отправить сообщение даже без HTML: {str(e)}")
-                return False
-
+        await bot.send_message(chat_id=chat_id, text=message, parse_mode="HTML")
+        return True
+    except TelegramForbiddenError:
+        logging.warning(f"Пользователь {chat_id} заблокировал бота")
+        return False
     except Exception as e:
-        # Подробный лог ошибки
-        logging.error(f"Ошибка отправки уведомления пользователю {chat_id}: {str(e)}")
-
-        # Дополнительная информация для отладки
-        try:
-            error_type = type(e).__name__
-            logging.error(f"Тип ошибки: {error_type}")
-
-            if hasattr(e, 'with_traceback'):
-                import traceback
-                error_trace = ''.join(traceback.format_tb(e.__traceback__))
-                logging.error(f"Трассировка: {error_trace}")
-        except:
-            pass
-
+        logging.error(f"Ошибка при отправке уведомления пользователю {chat_id}: {str(e)}")
         return False
 
 # Function to create inline keyboard for tickets
@@ -339,7 +291,7 @@ async def create_tickets_keyboard(tickets, page=0, items_per_page=3):
                     "В работе" if ticket.status == "in_progress" else \
                     "Решена" if ticket.status == "resolved" else \
                     "Неактуальна" if ticket.status == "irrelevant" else "Закрыта"
-        created_date = ticket.created_at.strftime('%d.%m.%Y')
+        created_date = to_msk(ticket.created_at).strftime('%d.%m.%Y')
         title_display = ticket.title
         if len(title_display) > 25:
             title_display = title_display[:22] + "..."
@@ -381,48 +333,59 @@ async def update_user_activity(user_id, state: FSMContext):
 # Start command handler
 @dp.message(Command("start"))
 async def send_welcome(message: types.Message, state: FSMContext):
-    user_db = SessionLocal()
-
+    """Обрабатывает команду /start"""
     try:
-        # Check if user exists
-        user = get_user_by_chat_id(message.chat.id, user_db)
+        # Проверяем, зарегистрирован ли пользователь
+        user_db = SessionLocal()
+        try:
+            existing_user = get_user_by_chat_id(str(message.chat.id), user_db)
+            if existing_user:
+                await message.answer(
+                    f"С возвращением, {existing_user.full_name}! 👋\n\n"
+                    "Используйте /help для просмотра доступных команд."
+                )
+                await update_user_activity(message.chat.id, state)
+                return
+        finally:
+            user_db.close()
 
-        if user:
-            await message.answer(f"Привет, {user.full_name}! Вы уже зарегистрированы в системе.\n"
-                               f"Я - бот для системы обработки заявок ОБУЗ КГКБСМП. Вот перечень команд, которые я могу обрабатывать:\n"
-                               f"/start - Начать работу с ботом или зарегистрироваться\n"
-                               f"/new_ticket - Создать новую заявку\n"
-                               f"/tickets - Выбрать активную заявку или просмотреть сообщения по ней\n\n"
-                               f"Внимание: если в чате не будет активности в течение 12 часов, активная заявка будет очищена, "
-                               f"и вам потребуется выбрать её снова через команду /tickets.")
-        else:
-            # Send GDPR consent message
-            gdpr_text = (
-                "Добро пожаловать в систему поддержки ОБУЗ КГКБСМП!\n\n"
-                "Перед регистрацией в системе, пожалуйста, ознакомьтесь с информацией о обработке персональных данных:\n\n"
-                "1. Ваши персональные данные (ФИО, должность, отделение, номер кабинета) будут храниться в защищенной базе данных системы.\n"
-                "2. Данные используются исключительно для идентификации пользователей и обработки заявок в системе.\n"
-                "3. Мы не передаем ваши данные третьим лицам.\n"
-                "4. Вы имеете право на удаление ваших данных из системы по запросу.\n\n"
-                "Для продолжения регистрации, пожалуйста, подтвердите свое согласие на обработку персональных данных."
+        # Если пользователь не зарегистрирован, начинаем процесс регистрации
+        gdpr_text = (
+            "Добро пожаловать! 👋\n\n"
+            "Для начала работы с системой поддержки необходимо дать согласие на обработку персональных данных.\n\n"
+            "Пожалуйста, ознакомьтесь с политикой обработки ПДн и подтвердите согласие:"
+        )
+        
+        keyboard = InlineKeyboardBuilder()
+        keyboard.add(InlineKeyboardButton(
+            text="✅ Принять",
+            callback_data="gdpr_accept"
+        ))
+        keyboard.add(InlineKeyboardButton(
+            text="❌ Отклонить",
+            callback_data="gdpr_decline"
+        ))
+        
+        await message.answer(gdpr_text, reply_markup=keyboard.as_markup())
+        await state.set_state(RegistrationStates.waiting_for_gdpr_consent)
+        
+    except TelegramForbiddenError:
+        logging.warning(f"Пользователь {message.chat.id} заблокировал бота")
+    except Exception as e:
+        logging.error(f"Ошибка при обработке команды /start: {str(e)}")
+        try:
+            await message.answer(
+                "❌ Произошла ошибка при запуске бота. Пожалуйста, попробуйте позже или обратитесь к администратору."
             )
-
-            # Create inline keyboard for consent
-            keyboard = InlineKeyboardBuilder()
-            keyboard.add(InlineKeyboardButton(text="Согласен", callback_data="gdpr_agree"))
-            keyboard.add(InlineKeyboardButton(text="Отказаться", callback_data="gdpr_decline"))
-
-            await message.answer(gdpr_text, reply_markup=keyboard.as_markup())
-            await state.set_state(RegistrationStates.waiting_for_gdpr_consent)
-    finally:
-        user_db.close()
+        except TelegramForbiddenError:
+            logging.warning(f"Пользователь {message.chat.id} заблокировал бота")
 
 # Handle GDPR consent callback
 @dp.callback_query(F.data.startswith("gdpr_"))
 async def process_gdpr_consent(callback: CallbackQuery, state: FSMContext):
     action = callback.data.split("_")[1]
 
-    if action == "agree":
+    if action == "accept":
         # Сохраняем согласие на обработку ПД
         await state.update_data(privacy_consent=True, consent_date=datetime.datetime.utcnow())
 
@@ -452,17 +415,32 @@ async def process_fullname(message: types.Message, state: FSMContext):
 @dp.message(RegistrationStates.waiting_for_position)
 async def process_position(message: types.Message, state: FSMContext):
     await state.update_data(position=message.text)
+    departments = load_departments()
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    for dep in departments:
+        keyboard.add(InlineKeyboardButton(text=dep['name'], callback_data=f"department:{dep['id']}"))
     await state.set_state(RegistrationStates.waiting_for_department)
-    await message.answer("Спасибо! Теперь введите ваше отделение:")
+    await message.answer("Спасибо! Теперь выберите ваше отделение:", reply_markup=keyboard)
     await update_user_activity(message.chat.id, state)
 
-# Process department input
-@dp.message(RegistrationStates.waiting_for_department)
-async def process_department(message: types.Message, state: FSMContext):
-    await state.update_data(department=message.text)
+@dp.callback_query(lambda c: c.data.startswith('department:'))
+async def process_department_callback(callback: CallbackQuery, state: FSMContext):
+    """Обрабатывает выбор отделения и показывает список кабинетов"""
+    department_id = callback.data.split(':')[1]
+    departments = load_departments()
+    department_info = departments.get(department_id, {})
+    
+    await state.update_data(
+        department_id=department_id,
+        department_name=department_info.get('name', '')
+    )
+    
+    keyboard = await create_offices_keyboard(department_id)
+    await callback.message.edit_text(
+        "Теперь выберите ваш кабинет:",
+        reply_markup=keyboard
+    )
     await state.set_state(RegistrationStates.waiting_for_office)
-    await message.answer("Спасибо! Наконец, введите номер вашего кабинета:")
-    await update_user_activity(message.chat.id, state)
 
 # Process office input and continue registration (ask for phone)
 @dp.message(RegistrationStates.waiting_for_office)
@@ -493,58 +471,69 @@ async def process_phone(message: types.Message, state: FSMContext):
 # Process email input and complete registration
 @dp.message(RegistrationStates.waiting_for_email)
 async def process_email(message: types.Message, state: FSMContext):
+    """Обрабатывает ввод email и завершает регистрацию"""
+    email = message.text.strip()
+    
+    # Проверяем формат email
+    if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+        await message.answer("Пожалуйста, введите корректный email адрес.")
+        return
+    
+    # Получаем все данные из состояния
+    data = await state.get_data()
+    
+    # Создаем нового пользователя
     user_db = SessionLocal()
     try:
-        email = None
-        if message.text != "-":
-            email = message.text
-
-        await state.update_data(email=email)
-        data = await state.get_data()
-
-        # --- Проверка на существующего пользователя ---
-        existing_user = user_db.query(User).filter(
-            (User.chat_id == str(message.chat.id)) | (User.email == email)
-        ).first()
-        if existing_user:
-            await message.answer(
-                "Пользователь с таким Telegram уже зарегистрирован или email уже используется.\n"
-                "Если вы считаете, что это ошибка — обратитесь к администратору."
-            )
-            await state.clear()
-            return
-
-        # --- Создание нового пользователя ---
         new_user = User(
+            chat_id=str(message.chat.id),
             full_name=data['full_name'],
             position=data['position'],
-            department=data['department'],
-            office=data['office'],
-            phone=data.get('phone'),
-            email=data.get('email'),
-            chat_id=str(message.chat.id),
-            role="agent",
-            privacy_consent=data.get('privacy_consent', False),
-            consent_date=data.get('consent_date'),
+            department=data['department_name'],
+            office=data['office_name'],
+            phone=data['phone'],
+            email=email,
+            privacy_consent=True,
+            consent_date=datetime.datetime.now(),
+            created_at=datetime.datetime.now(),
+            is_active=True,
             is_confirmed=False,
-            is_active=True
+            role='user'
         )
-
+        
         user_db.add(new_user)
         user_db.commit()
-
+        
         await message.answer(
-            f"Регистрация успешно завершена, {new_user.full_name}!✅\n\n"
-            f"⚠️ Ваш аккаунт находится на проверке у администратора. "
-            f"До подтверждения профиля некоторые функции будут ограничены.\n\n"
-            f"Вы сможете просматривать свой профиль по команде /profile, "
-            f"но создание заявок станет доступно только после подтверждения.\n\n"
-            f"Если вам срочно требуется доступ, обратитесь к администратору системы."
+            "✅ Регистрация успешно завершена!\n\n"
+            "Ваш аккаунт ожидает подтверждения администратором. "
+            "После подтверждения вы сможете создавать заявки и писать сообщения.\n\n"
+            "Используйте /help для просмотра доступных команд."
         )
-
-        # Clear state and update activity
+        
+        # Отправляем уведомление администраторам
+        admin_users = user_db.query(User).filter(User.role == 'admin').all()
+        for admin in admin_users:
+            notification_sent = await send_notification(
+                admin.chat_id,
+                f"🆕 Новая регистрация!\n\n"
+                f"👤 ФИО: {new_user.full_name}\n"
+                f"🏢 Должность: {new_user.position}\n"
+                f"🏥 Отделение: {new_user.department}\n"
+                f"🚪 Кабинет: {new_user.office}\n"
+                f"📱 Телефон: {new_user.phone}\n"
+                f"📧 Email: {new_user.email}"
+            )
+            if not notification_sent:
+                logging.warning(f"Не удалось отправить уведомление администратору {admin.chat_id}")
+        
         await state.clear()
-        await update_user_activity(message.chat.id, state)
+        
+    except Exception as e:
+        logging.error(f"Ошибка при создании пользователя: {str(e)}")
+        await message.answer(
+            "❌ Произошла ошибка при регистрации. Пожалуйста, попробуйте позже или обратитесь к администратору."
+        )
     finally:
         user_db.close()
 
@@ -698,7 +687,7 @@ async def download_telegram_file(file_id, destination_dir, custom_filename=None)
         else:
             # Extract original filename from path or generate one
             original_filename = os.path.basename(file_path)
-            timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+            timestamp = to_msk(datetime.datetime.now()).strftime("%Y%m%d%H%M%S")
             destination = os.path.join(destination_dir, f"{timestamp}_{original_filename}")
 
         # Download the file
@@ -868,8 +857,8 @@ async def select_ticket(message: types.Message, state: FSMContext):
             "id": t.id,
             "title": t.title,
             "status": t.status,
-            "created_at": t.created_at.isoformat(),
-            "resolved_at": t.updated_at.isoformat() if t.status in ["resolved", "irrelevant", "closed"] else None
+            "created_at": to_msk(t.created_at).isoformat(),
+            "resolved_at": to_msk(t.updated_at).isoformat() if t.status in ["resolved", "irrelevant", "closed"] else None
         } for t in tickets]
         await state.update_data(tickets=ticket_data, current_page=0)
 
@@ -934,10 +923,11 @@ async def clear_user_chat(user_id, bot):
 
 # 3. Исправить функцию display_last_10_messages
 async def display_last_10_messages(ticket_id, user_id, bot, ticket_db, state):
-    # Перед историей отправляем сообщение о "очистке чата"
-    await bot.send_message(chat_id=user_id, text="Чат очищен. История выбранной заявки:")
-    for _ in range(3):
-        await bot.send_message(chat_id=user_id, text="---")
+    # Получаем заявку для заголовка
+    from models.ticket_models import Ticket, Attachment
+    ticket = ticket_db.query(Ticket).filter(Ticket.id == ticket_id).first()
+    ticket_title = ticket.title if ticket else f"#{ticket_id}"
+    await bot.send_message(chat_id=user_id, text=f"Вы выбрали заявку <b>{ticket_title}</b> активной, далее — история сообщений:", parse_mode="HTML")
 
     # Получаем до 30 сообщений для заявки, сортировка по возрастанию (старые сверху)
     messages = ticket_db.query(Message)\
@@ -952,7 +942,6 @@ async def display_last_10_messages(ticket_id, user_id, bot, ticket_db, state):
             text="В этой заявке пока нет сообщений."
         )
     else:
-        from models.ticket_models import Attachment
         msg_ids = [msg.id for msg in messages]
         attachments = ticket_db.query(Attachment).filter(Attachment.message_id.in_(msg_ids)).all()
         att_map = {}
@@ -960,9 +949,12 @@ async def display_last_10_messages(ticket_id, user_id, bot, ticket_db, state):
             att_map.setdefault(att.message_id, []).append(att)
 
         for msg in messages:
-            timestamp = msg.created_at.strftime('%d.%m.%Y %H:%M')
-            sender_name = msg.sender_name
-            text = f"<b>{sender_name}</b> ({timestamp}):\n{msg.content}" if msg.content else f"<b>{sender_name}</b> ({timestamp})"
+            timestamp = to_msk(msg.created_at).strftime('%d.%m.%Y %H:%M')
+            if msg.is_from_user:
+                prefix = "Ваше сообщение:"
+            else:
+                prefix = "Сообщение администратора:"
+            text = f"<b>{prefix}</b> ({timestamp})\n{msg.content}" if msg.content else f"<b>{prefix}</b> ({timestamp})"
             msg_attachments = att_map.get(msg.id, [])
             if msg_attachments:
                 for att in msg_attachments:
@@ -1011,72 +1003,55 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import time
 
 async def handle_new_message_from_site(ticket_id: int, sender_name: str, message_text: str, chat_id: str, timestamp_str: Optional[str] = None):
-    ticket_db = SessionLocal()
-    state_data = None
+    db = SessionLocal()
     try:
-        try:
-            message_timestamp = datetime.datetime.fromisoformat(timestamp_str) if timestamp_str else datetime.datetime.utcnow()
-        except (ValueError, TypeError):
-            logging.warning(f"Invalid timestamp format received: {timestamp_str}. Using current UTC time.")
-            message_timestamp = datetime.datetime.utcnow()
-
-        # Deduplication check
-        if is_duplicate_message(chat_id, message_text, message_timestamp):
-            logging.info(f"Duplicate message detected from site for ticket {ticket_id}, chat {chat_id}. Skipping.")
-            return
-
-        # Save message to DB (assuming it's not a duplicate)
-        new_msg = Message(
-            ticket_id=ticket_id,
-            sender_name=sender_name, # Name of the sender from the website
-            content=message_text,
-            created_at=message_timestamp, # Use parsed or current time
-            is_internal=True # Message from website/operator
-        )
-        ticket_db.add(new_msg)
-        ticket_db.commit()
-        ticket_db.refresh(new_msg)
-
         # Получаем заявку
-        ticket = ticket_db.query(Ticket).filter(Ticket.id == ticket_id).first()
-        ticket_title = ticket.title if ticket else f"#{ticket_id}"
-
-        # Проверяем активную заявку пользователя
-        from aiogram.fsm.storage.base import StorageKey
-        user_fsm_context = FSMContext(storage=dp.storage, key=StorageKey(bot_id=bot.id, user_id=int(chat_id), chat_id=int(chat_id)))
-        state_data = await user_fsm_context.get_data()
-        active_ticket_id_in_state = state_data.get("active_ticket_id")
-
-        now = time.time()
-        notif_key = (chat_id, ticket_id)
-        if active_ticket_id_in_state != ticket_id:
-            # Проверяем лимит уведомлений (1 час)
-            if now - LAST_NOTIFICATION.get(notif_key, 0) > 3600:
-                keyboard = InlineKeyboardMarkup(
-                    inline_keyboard=[
-                        [InlineKeyboardButton(
-                            text=f"Открыть заявку: {ticket_title}",
-                            callback_data=f"select_ticket:{ticket_id}"
-                        )]
-                    ]
-                )
-                await bot.send_message(
-                    chat_id,
-                    f"🔔 В заявке <b>{ticket_title}</b> новое сообщение.",
-                    parse_mode="HTML",
-                    reply_markup=keyboard
-                )
-                LAST_NOTIFICATION[notif_key] = now
+        ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
+        if not ticket:
             return
-        # Если активная заявка совпадает — пересылать как обычно
-        await display_last_10_messages(ticket_id, int(chat_id), bot, ticket_db, user_fsm_context)
+
+        # Проверяем возможность комментирования
+        if not ticket.can_be_commented():
+            await bot.send_message(
+                chat_id=chat_id,
+                text=f"⚠️ Заявка находится в статусе '{ticket.get_status_display()}'. Комментирование недоступно."
+            )
+            return
+
+        # Создаем новое сообщение
+        new_message = Message(
+            ticket_id=ticket_id,
+            sender_id=chat_id,
+            sender_name=sender_name,
+            content=message_text,
+            is_from_user=True
+        )
+        db.add(new_message)
+
+        # Обновляем время последнего обновления заявки
+        ticket.updated_at = datetime.utcnow()
+        db.commit()
+
+        # Отправляем уведомление администраторам
+        admin_users = db.query(User).filter(User.role.in_(['admin', 'curator'])).all()
+        for admin in admin_users:
+            if admin.chat_id:
+                await bot.send_message(
+                    chat_id=admin.chat_id,
+                    text=f"💬 <b>Новое сообщение в заявке #{ticket_id}</b>\n\n"
+                         f"От: <b>{sender_name}</b>\n"
+                         f"Заявка: <b>{ticket.title}</b>\n"
+                         f"Сообщение: {message_text}",
+                    parse_mode="HTML"
+                )
 
     except Exception as e:
-        logging.error(f"Ошибка при обработке сообщения с сайта для заявки {ticket_id}: {e}")
+        db.rollback()
+        logging.error(f"Error in handle_new_message_from_site: {str(e)}")
     finally:
-        ticket_db.close()
+        db.close()
 
-# 5. В check_inactive_users: если не было активности 6 часов, сбрасывать active_ticket_id и очищать чат
+# 5. В check_inactive_users: если не было активности 3 часов, сбрасывать active_ticket_id и очищать чат
 async def check_inactive_users():
     try:
         while True:
@@ -1098,7 +1073,7 @@ async def check_inactive_users():
                                 try:
                                     last_activity_time = datetime.datetime.fromisoformat(last_activity)
                                     inactive_hours = (current_time - last_activity_time).total_seconds() / 3600
-                                    if inactive_hours >= 6:
+                                    if inactive_hours >= 3:
                                         logging.info(f"User {user_id} has been inactive for {inactive_hours:.2f} hours. Clearing active ticket.")
                                         state_data['active_ticket_id'] = None
                                         try:
@@ -1211,12 +1186,10 @@ async def show_profile(message: types.Message, state: FSMContext):
             return
 
         # Форматируем дату согласия
-        consent_date_str = "Не указана"
-        if user.consent_date:
-            consent_date_str = user.consent_date.strftime('%d.%m.%Y %H:%M')
+        consent_date_str = to_msk(user.consent_date).strftime('%d.%m.%Y %H:%M') if user.consent_date else 'Не указана'
 
         # Форматируем дату создания профиля
-        created_date_str = user.created_at.strftime('%d.%m.%Y %H:%M')
+        created_date_str = to_msk(user.created_at).strftime('%d.%m.%Y %H:%M')
 
         # Получаем статусы активности и подтверждения
         confirmation_status = "✅ Подтвержден" if user.is_confirmed else "❌ Ожидает подтверждения"
@@ -1332,3 +1305,103 @@ async def process_ticket_pagination(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
     finally:
         ticket_db.close()
+
+def load_departments():
+    """Загружает список отделений из JSON файла"""
+    try:
+        with open('data/departments.json', 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception as e:
+        logging.error(f"Ошибка при загрузке отделений: {str(e)}")
+        return {}
+
+def get_offices_for_department(department_id: str):
+    """Получает список кабинетов для конкретного отделения"""
+    departments = load_departments()
+    return departments.get(department_id, {}).get('offices', [])
+
+async def create_departments_keyboard():
+    """Создает клавиатуру с отделениями"""
+    departments = load_departments()
+    builder = InlineKeyboardBuilder()
+    
+    for dept_id, dept_info in departments.items():
+        builder.add(InlineKeyboardButton(
+            text=dept_info['name'],
+            callback_data=f"department:{dept_id}"
+        ))
+    
+    builder.adjust(1)  # По одной кнопке в ряд
+    return builder.as_markup()
+
+async def create_offices_keyboard(department_id: str):
+    """Создает клавиатуру с кабинетами для выбранного отделения"""
+    offices = get_offices_for_department(department_id)
+    builder = InlineKeyboardBuilder()
+    
+    for office in offices:
+        builder.add(InlineKeyboardButton(
+            text=office['name'],
+            callback_data=f"office:{office['id']}"
+        ))
+    
+    builder.adjust(1)  # По одной кнопке в ряд
+    return builder.as_markup()
+
+@dp.message(RegistrationStates.waiting_for_department)
+async def process_department_selection(message: types.Message, state: FSMContext):
+    """Показывает список отделений"""
+    keyboard = await create_departments_keyboard()
+    await message.answer(
+        "Выберите ваше отделение:",
+        reply_markup=keyboard
+    )
+
+@dp.callback_query(lambda c: c.data.startswith('department:'))
+async def process_department_callback(callback: CallbackQuery, state: FSMContext):
+    """Обрабатывает выбор отделения и показывает список кабинетов"""
+    department_id = callback.data.split(':')[1]
+    departments = load_departments()
+    department_info = departments.get(department_id, {})
+    
+    await state.update_data(
+        department_id=department_id,
+        department_name=department_info.get('name', '')
+    )
+    
+    keyboard = await create_offices_keyboard(department_id)
+    await callback.message.edit_text(
+        "Теперь выберите ваш кабинет:",
+        reply_markup=keyboard
+    )
+    await state.set_state(RegistrationStates.waiting_for_office)
+
+@dp.callback_query(lambda c: c.data.startswith('office:'))
+async def process_office_callback(callback: CallbackQuery, state: FSMContext):
+    """Обрабатывает выбор кабинета"""
+    office_id = callback.data.split(':')[1]
+    state_data = await state.get_data()
+    department_id = state_data.get('department_id')
+    
+    departments = load_departments()
+    department_info = departments.get(department_id, {})
+    offices = department_info.get('offices', [])
+    
+    office_info = next((office for office in offices if office['id'] == office_id), {})
+    
+    await state.update_data(
+        office_id=office_id,
+        office_name=office_info.get('name', '')
+    )
+    
+    await callback.message.edit_text(
+        "Отлично! Теперь введите ваш номер телефона:"
+    )
+    await state.set_state(RegistrationStates.waiting_for_phone)
+
+def to_msk(dt):
+    if dt is None:
+        return ''
+    if dt.tzinfo is None:
+        dt = utc.localize(dt)
+    return dt.astimezone(timezone('Europe/Moscow'))

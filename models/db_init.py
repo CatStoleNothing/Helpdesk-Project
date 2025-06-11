@@ -18,7 +18,13 @@ def init_db():
 
     # Импортируем все модели, чтобы они зарегистрировались в Base
     from models.user_models import User  # Сначала импортируем User
-    from models.ticket_models import Ticket, Attachment, Message, TicketCategory, AuditLog, DashboardMessage, DashboardAttachment
+    from models.ticket_models import (
+        Ticket, Attachment, Message, TicketCategory, 
+        AuditLog, DashboardMessage, DashboardAttachment
+    )
+    from models.department_models import Department
+    from models.office_models import Office
+    from models.position_models import Position
 
     # Создаём все таблицы
     Base.metadata.create_all(bind=engine)

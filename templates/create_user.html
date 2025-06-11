@@ -15,19 +15,15 @@
             </div>
 
             <div class="col-md-6 mb-3">
-                <label for="role" class="form-label">Роль*</label>
-                <select class="form-select" id="role" name="role" required>
-                    <option value="user">Пользователь</option>
-                    <option value="admin">Администратор</option>
-                    <option value="curator">Куратор</option>
-                </select>
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" name="email" placeholder="Введите email">
             </div>
 
             <div class="col-md-6 mb-3">
                 <label for="username" class="form-label">Логин для входа*</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="fas fa-user"></i></span>
-                    <input type="text" class="form-control" id="username" name="username" placeholder="Введите логин">
+                    <input type="text" class="form-control" id="username" name="username" placeholder="Введите логин" required>
                 </div>
             </div>
 
@@ -35,32 +31,52 @@
                 <label for="password" class="form-label">Пароль*</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                    <input type="password" class="form-control" id="password" name="password" placeholder="Введите пароль">
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Введите пароль" required>
                 </div>
             </div>
 
-            <div class="col-md-4 mb-3">
-                <label for="position" class="form-label">Должность</label>
-                <input type="text" class="form-control" id="position" name="position" placeholder="Укажите должность">
+            <div class="col-md-6 mb-3">
+                <label for="phone" class="form-label">Телефон</label>
+                <input type="tel" class="form-control" id="phone" name="phone" placeholder="Введите номер телефона">
             </div>
 
-            <div class="col-md-4 mb-3">
-                <label for="department" class="form-label">Отдел</label>
-                <input type="text" class="form-control" id="department" name="department" placeholder="Укажите отдел">
-            </div>
-
-            <div class="col-md-4 mb-3">
-                <label for="office" class="form-label">Офис</label>
-                <input type="text" class="form-control" id="office" name="office" placeholder="Укажите офис">
-            </div>
-
-            <div class="col-md-12 mb-3">
+            <div class="col-md-6 mb-3">
                 <label for="chat_id" class="form-label">ID в Telegram</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="fab fa-telegram"></i></span>
                     <input type="text" class="form-control" id="chat_id" name="chat_id" placeholder="ID пользователя в Telegram">
                 </div>
-                <div class="form-text">Укажите ID пользователя в Telegram для связывания учетной записи с ботом.</div>
+                <div class="form-text">Укажите ID пользователя в Telegram для связывания учетной записи с ботом</div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <label for="position_id" class="form-label">Должность</label>
+                <select class="form-select" id="position_id" name="position_id">
+                    <option value="">Выберите должность</option>
+                    {% for position in positions %}
+                    <option value="{{ position.id }}">{{ position.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <label for="department_id" class="form-label">Отдел</label>
+                <select class="form-select" id="department_id" name="department_id">
+                    <option value="">Выберите отдел</option>
+                    {% for department in departments %}
+                    <option value="{{ department.id }}">{{ department.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <label for="office_id" class="form-label">Кабинет</label>
+                <select class="form-select" id="office_id" name="office_id">
+                    <option value="">Выберите кабинет</option>
+                    {% for office in offices %}
+                    <option value="{{ office.id }}">{{ office.name }}</option>
+                    {% endfor %}
+                </select>
             </div>
 
             <div class="col-md-12 text-end mt-3">

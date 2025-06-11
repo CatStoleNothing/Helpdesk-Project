@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Редактировать' if office else 'Добавить' }} кабинет | Helpdesk{% endblock %}
+{% block page_title %}{{ 'Редактировать' if office else 'Добавить' }} кабинет{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4>
+        <i class="fas fa-door-open me-2"></i>
+        {{ 'Редактировать кабинет' if office else 'Добавить кабинет' }}
+    </h4>
+    <a href="{{ url_for('dictionaries') }}#offices" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Назад к списку
+    </a>
+</div>
+
+<div class="form-container">
+    <form method="post">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-4">
+                    <label for="name" class="form-label">
+                        <i class="fas fa-tag me-1"></i>Название кабинета <span class="text-danger">*</span>
+                    </label>
+                    <input type="text"
+                           class="form-control"
+                           id="name"
+                           name="name"
+                           required
+                           value="{{ office.name if office else '' }}"
+                           placeholder="Введите название кабинета">
+                    <div class="form-text">Укажите номер или название кабинета</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-4">
+                    <label for="department_id" class="form-label">
+                        <i class="fas fa-building me-1"></i>Отделение
+                    </label>
+                    <select class="form-select" id="department_id" name="department_id">
+                        <option value="">Не указано</option>
+                        {% for dep in departments %}
+                            <option value="{{ dep.id }}"
+                                    {% if office and office.department_id == dep.id %}selected{% endif %}>
+                                {{ dep.name }}
+                                {% if not dep.is_currently_active %} (неактивно){% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <div class="form-text">Выберите отделение, к которому относится кабинет</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            {% if office %}
+            <div class="col-md-4">
+                <div class="mb-4">
+                    <div class="alert {{ 'alert-success' if office.is_currently_active else 'alert-danger' }}">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Текущий статус: {{ 'Активен' if office.is_currently_active else 'Неактивен' }}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            <div class="col-md-4">
+                <div class="mb-4">
+                    <label for="active_from" class="form-label">
+                        <i class="fas fa-calendar-plus me-1"></i>Дата начала активности
+                    </label>
+                    <input type="date"
+                           class="form-control"
+                           id="active_from"
+                           name="active_from"
+                           value="{{ office.active_from.strftime('%Y-%m-%d') if office and office.active_from else '' }}">
+                    <div class="form-text">С какой даты кабинет активен</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="mb-4">
+                    <label for="active_to" class="form-label">
+                        <i class="fas fa-calendar-minus me-1"></i>Дата окончания активности
+                    </label>
+                    <input type="date"
+                           class="form-control"
+                           id="active_to"
+                           name="active_to"
+                           value="{{ office.active_to.strftime('%Y-%m-%d') if office and office.active_to else '' }}">
+                    <div class="form-text">До какой даты кабинет активен</div>
+                </div>
+            </div>
+        </div>
+
+        <hr class="my-4">
+
+        <div class="d-flex justify-content-end gap-2">
+            <a href="{{ url_for('dictionaries') }}#offices" class="btn btn-secondary">
+                <i class="fas fa-times me-1"></i>Отмена
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save me-1"></i>
+                {{ 'Сохранить изменения' if office else 'Создать кабинет' }}
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+// Улучшение UX - выделение поля при фокусе с Ctrl+A
+document.addEventListener('DOMContentLoaded', function() {
+    const inputs = document.querySelectorAll('input[type="text"], input[type="date"], textarea, select');
+
+    inputs.forEach(input => {
+        input.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'a') {
+                e.preventDefault();
+                if (this.tagName.toLowerCase() === 'select') {
+                    this.focus();
+                } else {
+                    this.select();
+                }
+            }
+        });
+
+        input.addEventListener('focus', function() {
+            this.addEventListener('keydown', selectAllHandler);
+        });
+
+        input.addEventListener('blur', function() {
+            this.removeEventListener('keydown', selectAllHandler);
+        });
+    });
+
+    function selectAllHandler(e) {
+        if (e.ctrlKey && e.key === 'a') {
+            e.preventDefault();
+            if (e.target.tagName.toLowerCase() === 'select') {
+                e.target.focus();
+            } else {
+                e.target.select();
+            }
+        }
+    }
+});
+</script>
+{% endblock %}
